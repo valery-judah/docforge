@@ -1,0 +1,95 @@
+services:
+  telemetry-postgres:
+    image: postgres:16-alpine
+    init: true
+    environment:
+      POSTGRES_DB: ${OBSERVABILITY_POSTGRES_DB:-doc_forge_observability}
+      POSTGRES_USER: ${OBSERVABILITY_POSTGRES_USER:-doc_forge}
+      POSTGRES_PASSWORD: ${OBSERVABILITY_POSTGRES_PASSWORD:-doc_forge}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${OBSERVABILITY_POSTGRES_USER:-doc_forge} -d ${OBSERVABILITY_POSTGRES_DB:-doc_forge_observability}",
+        ]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    ports:
+      - "${OBSERVABILITY_POSTGRES_PORT:-5433}:5432"
+    restart: unless-stopped
+    volumes:
+      - observability-pg-data:/var/lib/postgresql/data
+
+  loki:
+    image: grafana/loki:2.9.8
+    command: ["-config.file=/etc/loki/config.yaml"]
+    ports:
+      - "${OBSERVABILITY_LOKI_PORT:-3100}:3100"
+    restart: unless-stopped
+    volumes:
+      - ./observability/loki/config.yaml:/etc/loki/config.yaml:ro
+      - observability-loki-data:/loki
+
+  vector:
+    image: timberio/vector:0.38.0-alpine
+    command: ["--config", "/etc/vector/vector.yaml"]
+    depends_on:
+      - loki
+    restart: unless-stopped
+    volumes:
+      - ./observability/vector/vector.yaml:/etc/vector/vector.yaml:ro
+      - ./data/logs:/repo-data/logs:ro
+      - observability-vector-data:/vector-data-dir
+
+  evalops-loader:
+    build: .
+    entrypoint: ["python", "-m", "doc_forge.devtools.evalops_loader"]
+    command:
+      [
+        "--context-root",
+        "/repo-data/context/queries",
+        "scan",
+        "--loop",
+        "--interval-seconds",
+        "10",
+      ]
+    depends_on:
+      telemetry-postgres:
+        condition: service_healthy
+    environment:
+      DOC_FORGE_OBSERVABILITY_DATABASE_URL: postgresql+psycopg://${OBSERVABILITY_POSTGRES_USER:-doc_forge}:${OBSERVABILITY_POSTGRES_PASSWORD:-doc_forge}@telemetry-postgres:5432/${OBSERVABILITY_POSTGRES_DB:-doc_forge_observability}
+      DOC_FORGE_SERVICE_NAME: doc_forge-evalops-loader
+      DOC_FORGE_ENVIRONMENT: observability
+      DOC_FORGE_LOG_LEVEL: INFO
+    restart: unless-stopped
+    volumes:
+      - ./data/context:/repo-data/context:ro
+      - ./data/logs:/repo-data/logs:ro
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    depends_on:
+      - telemetry-postgres
+      - loki
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_USERS_DEFAULT_THEME: light
+      GF_INSTALL_PLUGINS: ""
+      OBSERVABILITY_POSTGRES_DB: ${OBSERVABILITY_POSTGRES_DB:-doc_forge_observability}
+      OBSERVABILITY_POSTGRES_USER: ${OBSERVABILITY_POSTGRES_USER:-doc_forge}
+      OBSERVABILITY_POSTGRES_PASSWORD: ${OBSERVABILITY_POSTGRES_PASSWORD:-doc_forge}
+    ports:
+      - "${OBSERVABILITY_GRAFANA_PORT:-3000}:3000"
+    restart: unless-stopped
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - observability-grafana-data:/var/lib/grafana
+
+volumes:
+  observability-pg-data:
+  observability-loki-data:
+  observability-grafana-data:
+  observability-vector-data:

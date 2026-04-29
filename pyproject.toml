@@ -1,0 +1,100 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "doc-forge"
+version = "0.1.0"
+description = "DocForge Python service scaffold"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "alembic>=1.14,<2",
+  "fastapi",
+  "psycopg[binary]>=3.2,<4",
+  "pydantic>=2,<3",
+  "pydantic-settings>=2.13.1",
+  "pypdf>=5.0.0",
+  "python-dotenv>=1.2.2",
+  "python-multipart",
+  "sqlalchemy>=2,<3",
+  "structlog>=25.5.0",
+  "uvicorn",
+]
+
+[dependency-groups]
+dev = [
+  "httpx>=0.28.1",
+  "poethepoet>=0.42.1",
+  "pyright>=1.1.408",
+  "pytest>=8.4.0",
+  "ruff>=0.12.0",
+  "testcontainers[postgres]>=4.14.1",
+]
+llm = [
+    "sentence-transformers>=5.2.3",
+    "torch>=2.10.0",
+]
+mac = [
+    "mlx-lm>=0.31.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/doc_forge"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "strict"
+reportUnnecessaryTypeIgnoreComment = "warning"
+include = ["src"]
+exclude = [
+  ".venv",
+  ".venv/**",
+  ".venv-*",
+  ".venv-*/**",
+  "**/.venv",
+  "**/.venv/**",
+  "**/.venv-*",
+  "**/.venv-*/**",
+  "**/node_modules",
+  "**/__pycache__",
+  "**/.*",
+  ".pytest_cache",
+  ".ruff_cache",
+  ".tmp_mineru",
+  "data",
+  "output",
+]
+reportMissingTypeStubs = false
+executionEnvironments = [
+  { root = ".", extraPaths = ["src"] },
+]
+
+[tool.pytest.ini_options]
+addopts = "-q -m 'not e2e'"
+markers = [
+  "contract: lifecycle semantics and invariant tests",
+  "persistence: db-backed integrity and repository tests",
+  "artifacts: filesystem-backed artifact persistence tests",
+  "e2e: docker-backed end-to-end lifecycle tests",
+]
+norecursedirs = ["tests/mvp_document_lifecycle_tests_split"]
+testpaths = ["tests"]
+
+[tool.poe]
+include = "poe_tasks.toml"
+envfile = ".env"
+
+[tool.poe.env]
+DATABASE_URL = { default = "postgresql+psycopg://doc-forge:doc-forge@localhost:5432/doc-forge" }
+DOC_FORGE_ARTIFACT_ROOT = { default = "./data" }
+DOC_FORGE_ENVIRONMENT = { default = "dev" }

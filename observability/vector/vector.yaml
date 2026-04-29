@@ -1,0 +1,64 @@
+data_dir: /vector-data-dir
+
+sources:
+  repo_logs:
+    type: file
+    include:
+      - /repo-data/logs/compose/runs/**/*.jsonl
+      - /repo-data/logs/e2e/runs/**/*.jsonl
+    read_from: beginning
+
+transforms:
+  parse_repo_logs:
+    type: remap
+    inputs:
+      - repo_logs
+    source: |
+      .raw_message = .message
+      structured, err = parse_json(string!(.message))
+      if err == null && is_object(structured) {
+        . = merge!(., structured)
+      }
+      del(.message)
+      file_path = string!(.file)
+      compose_match, compose_err = parse_regex(file_path, r'^/repo-data/logs/compose/runs/(?P<run_id>[^/]+)/')
+      if compose_err == null {
+        .source_kind = "compose"
+        .run_id = compose_match.run_id
+      } else {
+        e2e_match, e2e_err = parse_regex(file_path, r'^/repo-data/logs/e2e/runs/(?P<run_id>[^/]+)/(?P<test_id>[^/]+)/')
+        if e2e_err == null {
+        .source_kind = "e2e"
+          .run_id = e2e_match.run_id
+          .test_id = e2e_match.test_id
+        }
+      }
+      .source_path = file_path
+      if !exists(.service) { .service = "unknown" }
+      if !exists(.environment) { .environment = "unknown" }
+      if !exists(.source_kind) { .source_kind = "" }
+      if !exists(.query_id) { .query_id = "" }
+      if !exists(.workspace_id) { .workspace_id = "" }
+      if !exists(.doc_id) { .doc_id = "" }
+      if !exists(.run_id) { .run_id = "" }
+      if !exists(.test_id) { .test_id = "" }
+      if !exists(.case_id) { .case_id = "" }
+
+sinks:
+  loki:
+    type: loki
+    inputs:
+      - parse_repo_logs
+    endpoint: http://loki:3100
+    encoding:
+      codec: json
+    labels:
+      service: "{{ service }}"
+      environment: "{{ environment }}"
+      source_kind: "{{ source_kind }}"
+      query_id: "{{ query_id }}"
+      workspace_id: "{{ workspace_id }}"
+      doc_id: "{{ doc_id }}"
+      run_id: "{{ run_id }}"
+      test_id: "{{ test_id }}"
+      case_id: "{{ case_id }}"

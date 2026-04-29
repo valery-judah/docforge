@@ -1,0 +1,109 @@
+{
+  "title": "Central Eval Observability",
+  "uid": "central-eval-observability",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "table",
+      "title": "Recent Query Context Runs",
+      "datasource": {
+        "type": "postgres",
+        "uid": "observability-postgres"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "observability-postgres"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select collected_at, query_id, case_id, workspace_id, source_kind, support_state, answer_mode, evaluator_outcome, run_id, test_id from query_context_runs order by collected_at desc limit 100;"
+        }
+      ],
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Recent Eval Case Results",
+      "datasource": {
+        "type": "postgres",
+        "uid": "observability-postgres"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "observability-postgres"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select case_id, query_id, trust_outcome, support_alignment_verdict, scope_control_verdict, provenance_quality_verdict, abstention_behavior_verdict from eval_case_results order by query_id desc limit 100;"
+        }
+      ],
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 3,
+      "type": "logs",
+      "title": "API And Worker Logs",
+      "datasource": {
+        "type": "loki",
+        "uid": "observability-loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "observability-loki"
+          },
+          "expr": "{service=~\"doc_forge-api|doc_forge-worker|api|worker|doc_forge-api|doc_forge-worker\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showLabels": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  }
+}

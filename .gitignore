@@ -1,0 +1,84 @@
+# Virtual environments
+.venv/
+.venv-*/
+venv/
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Packaging / build artifacts
+build/
+dist/
+artifacts/
+!src/doc_forge/artifacts/
+!src/doc_forge/artifacts/**
+!tests/artifacts/
+!tests/artifacts/**
+src/doc_forge/artifacts/**/__pycache__/
+src/doc_forge/artifacts/**/*.py[cod]
+tests/artifacts/**/__pycache__/
+tests/artifacts/**/*.py[cod]
+*.egg-info/
+.eggs/
+*.egg
+pip-wheel-metadata/
+
+# Tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyright/
+.hypothesis/
+.tox/
+.nox/
+.cache/
+.tmp_uv_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Local secrets / credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+*.der
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+secrets.*
+credentials.*
+*.secret
+*.secrets
+*.api_key
+*.apikey
+*.token
+
+# Editor / OS noise
+.DS_Store
+.vscode/
+.idea/
+.claude/
+.obsidian/
+
+# Local corpus / runtime data
+input/
+data/
+output/
+
+# Ignore devex scripts but keep the directory
+scripts/devex/*
+!scripts/devex/.gitkeep
+pyright_output.json

@@ -1,0 +1,22 @@
+apiVersion: 1
+
+datasources:
+  - name: Observability Postgres
+    uid: observability-postgres
+    type: postgres
+    access: proxy
+    url: telemetry-postgres:5432
+    user: ${OBSERVABILITY_POSTGRES_USER}
+    secureJsonData:
+      password: ${OBSERVABILITY_POSTGRES_PASSWORD}
+    jsonData:
+      database: ${OBSERVABILITY_POSTGRES_DB}
+      sslmode: disable
+      postgresVersion: 1600
+      timescaledb: false
+
+  - name: Observability Loki
+    uid: observability-loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
