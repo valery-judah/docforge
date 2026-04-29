@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/eval-case.schema.json",
+  "title": "Synthetic Eval Case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "corpus_id",
+    "case_family",
+    "source_type",
+    "primary_target_failures",
+    "question_spec"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9._:-]+$"
+    },
+    "corpus_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9._:-]+$"
+    },
+    "case_family": {
+      "type": "string",
+      "enum": [
+        "supported_lookup",
+        "supported_source_navigation",
+        "supported_localized_explanation",
+        "partial_support_answer",
+        "unsupported_in_corpus",
+        "unsupported_question_type",
+        "ambiguous_conflicting_evidence",
+        "ingestion_structure_stress"
+      ]
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "markdown",
+        "pdf",
+        "mixed"
+      ]
+    },
+    "primary_target_failures": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "U1",
+          "U2",
+          "A1",
+          "A2",
+          "P1",
+          "P2",
+          "I1",
+          "S1"
+        ]
+      }
+    },
+    "secondary_target_failures": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "U1",
+          "U2",
+          "A1",
+          "A2",
+          "P1",
+          "P2",
+          "I1",
+          "S1"
+        ]
+      },
+      "default": []
+    },
+    "question_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "question",
+        "question_class",
+        "support_state",
+        "minimum_provenance",
+        "gold_sources"
+      ],
+      "properties": {
+        "question": {
+          "type": "string",
+          "minLength": 8
+        },
+        "question_class": {
+          "type": "string",
+          "enum": [
+            "factual_lookup",
+            "localized_explanation",
+            "multi_source_synthesis",
+            "source_navigation",
+            "partial_support",
+            "unsupported_scope",
+            "ambiguous_conflict"
+          ]
+        },
+        "support_state": {
+          "type": "string",
+          "enum": [
+            "SUPPORTED",
+            "PARTIALLY_SUPPORTED",
+            "UNSUPPORTED_IN_CORPUS",
+            "UNSUPPORTED_QUESTION_TYPE",
+            "AMBIGUOUS_OR_CONFLICTING"
+          ]
+        },
+        "minimum_provenance": {
+          "type": "string",
+          "enum": [
+            "document_only",
+            "document_and_page",
+            "document_and_section",
+            "document_page_and_section_if_available"
+          ]
+        },
+        "gold_sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/goldSource"
+          }
+        },
+        "user_intent_note": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "authoring_notes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "difficulty": {
+          "type": "string",
+          "enum": ["easy", "medium", "hard"]
+        },
+        "paraphrase_level": {
+          "type": "string",
+          "enum": ["low", "medium", "high"]
+        },
+        "single_hop": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "goldSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "doc_id",
+        "display_name"
+      ],
+      "anyOf": [
+        {
+          "required": ["section_path"]
+        },
+        {
+          "required": ["page_start"]
+        },
+        {
+          "required": ["section_anchor"]
+        }
+      ],
+      "properties": {
+        "doc_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._:-]+$"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "section_path": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "page_start": {
+          "type": "integer"
+        },
+        "page_end": {
+          "type": "integer"
+        },
+        "section_anchor": {
+          "type": "string"
+        },
+        "support_snippet": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

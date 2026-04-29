@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/eval-answer-key.schema.json",
+  "title": "Synthetic Eval Answer Key",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "case_id",
+    "answer_type",
+    "canonical_answer",
+    "must_include",
+    "must_not_include",
+    "gold_evidence_set",
+    "expected_behavior",
+    "abstention_expected"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9._:-]+$"
+    },
+    "answer_type": {
+      "type": "string",
+      "enum": [
+        "scalar",
+        "short_phrase",
+        "short_sentence",
+        "short_list"
+      ]
+    },
+    "canonical_answer": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      ]
+    },
+    "acceptable_paraphrases": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": []
+    },
+    "must_include": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": []
+    },
+    "must_not_include": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": []
+    },
+    "gold_evidence_set": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/goldSource"
+      }
+    },
+    "expected_behavior": {
+      "type": "string",
+      "enum": [
+        "direct_answer_with_section_citation",
+        "direct_answer_with_page_citation",
+        "direct_navigation_with_section_citation",
+        "direct_navigation_with_page_citation",
+        "qualified_answer_with_citation",
+        "abstain_or_state_insufficient_support",
+        "state_scope_limitation",
+        "surface_ambiguity_with_source_qualification",
+        "honest_failure_with_best_available_locator"
+      ]
+    },
+    "abstention_expected": {
+      "type": "boolean"
+    },
+    "grading_notes": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "goldSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "doc_id",
+        "display_name"
+      ],
+      "anyOf": [
+        {
+          "required": ["section_path"]
+        },
+        {
+          "required": ["page_start"]
+        },
+        {
+          "required": ["section_anchor"]
+        }
+      ],
+      "properties": {
+        "doc_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._:-]+$"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "section_path": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "page_start": {
+          "type": "integer"
+        },
+        "page_end": {
+          "type": "integer"
+        },
+        "section_anchor": {
+          "type": "string"
+        },
+        "support_snippet": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
