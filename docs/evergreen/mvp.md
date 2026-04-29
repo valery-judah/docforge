@@ -9,7 +9,6 @@ It proves one end-to-end product invariant over Markdown files:
 ```text
 uploaded Markdown
   -> accepted document in a query scope
-  -> retrievable Markdown evidence
   -> corpus-scoped retrieval
   
 query lifecycle
