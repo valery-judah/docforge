@@ -12,7 +12,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-COPY pyproject.toml uv.lock README.md alembic.ini ./
+COPY pyproject.toml uv.lock README.md ./
 COPY scripts/container-log-wrapper.sh /usr/local/bin/container-log-wrapper.sh
 
 RUN --mount=type=cache,target=/tmp/.uv-cache \

@@ -1,7 +1,6 @@
 .DEFAULT_GOAL := help
 
 -include .env
-export DATABASE_URL ?= postgresql+psycopg://doc-forge:doc-forge@localhost:5432/doc-forge
 export DOC_FORGE_ARTIFACT_ROOT ?= ./data
 export DOC_FORGE_ENVIRONMENT ?= dev
 
@@ -79,7 +78,3 @@ docker-log-index: ## Show repo-local archived container log locations
 	@printf "  %s\n" "$(CURDIR)/data/logs/e2e/latest"
 	@echo "query context root:"
 	@printf "  %s\n" "$(CURDIR)/data/context/queries"
-
-.PHONY: docker-db-shell
-docker-db-shell: ## Open a psql shell inside the Docker Postgres service
-	$(DOCKER_COMPOSE) exec db psql -U "$${POSTGRES_USER:-doc-forge}" -d "$${POSTGRES_DB:-doc-forge}"

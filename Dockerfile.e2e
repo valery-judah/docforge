@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-COPY pyproject.toml uv.lock README.md alembic.ini ./
+COPY pyproject.toml uv.lock README.md ./
 COPY scripts/container-log-wrapper.sh /usr/local/bin/container-log-wrapper.sh
 
 RUN uv sync --frozen --no-dev --no-install-project --group llm
