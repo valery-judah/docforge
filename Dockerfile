@@ -8,6 +8,7 @@ ENV PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=0 \
     UV_CACHE_DIR=/tmp/.uv-cache \
+    PORT=8000 \
     DOC_FORGE_ARTIFACT_ROOT=/artifacts
 
 WORKDIR /app
@@ -16,23 +17,25 @@ COPY pyproject.toml uv.lock README.md ./
 COPY scripts/container-log-wrapper.sh /usr/local/bin/container-log-wrapper.sh
 
 RUN --mount=type=cache,target=/tmp/.uv-cache \
-    uv sync --frozen --no-dev --no-install-project --group llm
+    uv sync --frozen --no-dev --no-install-project
 
 COPY src ./src
 
 RUN --mount=type=cache,target=/tmp/.uv-cache \
-    uv sync --frozen --no-dev --group llm
-
-ENV PATH="/app/.venv/bin:${PATH}"
-
-RUN groupadd --system --gid 1000 doc-forge \
+    uv sync --frozen --no-dev \
+    && groupadd --system --gid 1000 doc-forge \
     && useradd --system --uid 1000 --gid 1000 --create-home --home-dir /home/doc-forge doc-forge \
     && install -d --owner=doc-forge --group=doc-forge /artifacts \
     && chmod +x /usr/local/bin/container-log-wrapper.sh
+
+ENV PATH="/app/.venv/bin:${PATH}"
 
 USER doc-forge
 
 EXPOSE 8000
 
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import os, sys, urllib.request; port = os.environ.get('PORT', '8000'); sys.exit(0 if urllib.request.urlopen(f'http://127.0.0.1:{port}/readyz', timeout=2).status == 200 else 1)"
+
 ENTRYPOINT ["container-log-wrapper.sh"]
-CMD ["sh", "-c", "uvicorn doc_forge.app.api:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "exec uvicorn doc_forge.app.api:app --host 0.0.0.0 --port ${PORT:-8000}"]

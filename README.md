@@ -31,3 +31,24 @@ The task-runner split mirrors the `sem-rag` setup:
 - `poe_tasks.toml`: Python task catalog
 - `Makefile`: Docker, Compose, and local DevEx wrappers
 - `uv.toml`: repo-local uv cache configuration
+
+## Docker
+
+Build and run the API container through Compose:
+
+```bash
+make docker-up-build
+curl http://127.0.0.1:8000/readyz
+make docker-down
+```
+
+Use `PORT` to change the host port while the container continues to listen on
+port `8000`:
+
+```bash
+PORT=8080 make docker-up-build
+curl http://127.0.0.1:8080/readyz
+```
+
+Runtime artifacts are mounted at `./data` on the host and `/artifacts` in the
+container. Compose JSON logs are archived under `./data/logs/compose`.

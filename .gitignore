@@ -34,6 +34,7 @@ pip-wheel-metadata/
 .tox/
 .nox/
 .cache/
+.tmp_docker_config/
 .tmp_uv_cache/
 .coverage
 .coverage.*

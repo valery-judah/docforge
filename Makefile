@@ -34,15 +34,13 @@ docker-build: ## Build the local Docker image for the API runtime
 
 .PHONY: docker-up
 docker-up: ## Start the local Docker stack in detached mode
-	@eval "$$(uv run python -m doc_forge.devtools.docker_local_generator shell-env)"; \
-	run_id="$$(./scripts/prepare_compose_logs.sh)"; \
+	@run_id="$$(./scripts/prepare_compose_logs.sh)"; \
 	echo "compose log run id: $$run_id"; \
 	DOC_FORGE_LOG_RUN_ID="$$run_id" $(DOCKER_COMPOSE) up -d
 
 .PHONY: docker-up-build
 docker-up-build: ## Build and start the local Docker stack in detached mode
-	@eval "$$(uv run python -m doc_forge.devtools.docker_local_generator shell-env)"; \
-	run_id="$$(./scripts/prepare_compose_logs.sh)"; \
+	@run_id="$$(./scripts/prepare_compose_logs.sh)"; \
 	echo "compose log run id: $$run_id"; \
 	DOC_FORGE_LOG_RUN_ID="$$run_id" $(DOCKER_COMPOSE) up -d --build
 

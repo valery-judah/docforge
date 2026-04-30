@@ -1,53 +1,28 @@
 services:
   api:
     build: .
-    command:
-      [
-        "sh",
-        "-c",
-        "uvicorn doc_forge.app.api:app --host 0.0.0.0 --port $${PORT:-8000}",
-      ]
     init: true
     user: "${DOC_FORGE_UID:-1000}:${DOC_FORGE_GID:-1000}"
     environment:
       DOC_FORGE_ARTIFACT_ROOT: /artifacts
       DOC_FORGE_SERVICE_NAME: doc_forge-api
-      DOC_FORGE_EMBEDDING_BACKEND: ${DOC_FORGE_EMBEDDING_BACKEND:-sentence-transformers}
-      DOC_FORGE_ANSWER_GENERATOR_BACKEND: ${DOC_FORGE_ANSWER_GENERATOR_BACKEND:-deterministic}
-      DOC_FORGE_ANSWER_GENERATOR_MODEL: ${DOC_FORGE_ANSWER_GENERATOR_MODEL:-llama3.2:1b}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       DOC_FORGE_JSON_LOG_PATH: /logs/compose/runs/${DOC_FORGE_LOG_RUN_ID:-manual}/api.jsonl
-      TORCH_COMPILE_DISABLE: 1
-      TORCHINDUCTOR_CACHE_DIR: /tmp/torch_cache
-      HF_HOME: /tmp/hf_cache
-      PORT: "${PORT:-8000}"
+      PORT: "8000"
     volumes:
       - ./data:/artifacts
       - ./data/logs:/logs
     ports:
-      - "${PORT:-8000}:${PORT:-8000}"
+      - "${PORT:-8000}:8000"
     healthcheck:
       test:
         [
           "CMD",
           "python",
           "-c",
-          "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:${PORT:-8000}/readyz', timeout=2).status == 200 else 1)",
+          "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=2).status == 200 else 1)",
         ]
       interval: 5s
       timeout: 3s
       retries: 12
       start_period: 5s
     restart: unless-stopped
-
-  ollama:
-    image: ollama/ollama
-    profiles:
-      - ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama-data:/root/.ollama
-
-volumes:
-  ollama-data:
