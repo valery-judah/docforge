@@ -72,15 +72,15 @@ This document does not broaden MVP scope. If this document conflicts with `docs/
 
 ### M0-1. Markdown Ingestion
 
-Users can provide Markdown files for processing within a bounded query scope.
+Users can provide Markdown files within a bounded query scope.
 
 Acceptance criteria:
 
-- A valid Markdown file is accepted for processing.
-- Unsupported file types are rejected or clearly marked unsupported.
+- A valid Markdown file is accepted only after it is queryable in the selected scope.
+- Unsupported file types are rejected.
 - Each accepted document can be referred to consistently after ingestion.
 - Each accepted document belongs to one active query scope.
-- The system exposes whether the document is still processing, ready for querying, or failed.
+- Ingestion errors return an error and do not create a partial document record.
 
 ### M0-2. Bounded Query Scope
 
