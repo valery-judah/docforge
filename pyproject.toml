@@ -9,16 +9,13 @@ description = "DocForge Python service scaffold"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "alembic>=1.14,<2",
   "fastapi",
   "marko>=2.2.2",
-  "psycopg[binary]>=3.2,<4",
   "pydantic>=2,<3",
   "pydantic-settings>=2.13.1",
   "pypdf>=5.0.0",
   "python-dotenv>=1.2.2",
   "python-multipart",
-  "sqlalchemy>=2,<3",
   "structlog>=25.5.0",
   "uvicorn",
 ]
@@ -30,7 +27,6 @@ dev = [
   "pyright>=1.1.408",
   "pytest>=8.4.0",
   "ruff>=0.12.0",
-  "testcontainers[postgres]>=4.14.1",
 ]
 llm = [
     "sentence-transformers>=5.2.3",
@@ -83,10 +79,9 @@ executionEnvironments = [
 [tool.pytest.ini_options]
 addopts = "-q -m 'not e2e'"
 markers = [
-  "contract: lifecycle semantics and invariant tests",
-  "persistence: db-backed integrity and repository tests",
+  "contract: ingestion semantics and invariant tests",
   "artifacts: filesystem-backed artifact persistence tests",
-  "e2e: docker-backed end-to-end lifecycle tests",
+  "e2e: docker-backed end-to-end ingestion tests",
 ]
 norecursedirs = ["tests/mvp_document_lifecycle_tests_split"]
 testpaths = ["tests"]
@@ -96,6 +91,5 @@ include = "poe_tasks.toml"
 envfile = ".env"
 
 [tool.poe.env]
-DATABASE_URL = { default = "postgresql+psycopg://doc-forge:doc-forge@localhost:5432/doc-forge" }
 DOC_FORGE_ARTIFACT_ROOT = { default = "./data" }
 DOC_FORGE_ENVIRONMENT = { default = "dev" }

@@ -29,11 +29,11 @@ Use the matrix when reviewing pull requests that alter runtime behavior.
 
 ## Ingestion Workflow
 
-Upload Markdown documents through the API after the worker is running.
+Upload Markdown documents through the API.
 
 - Confirm the corpus exists.
 - Submit the document record.
-- Wait for parsing and embedding jobs to finish.
+- Confirm parsing and embedding finished before the upload response returned.
 
 ### Failure Modes
 

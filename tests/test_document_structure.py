@@ -5,7 +5,6 @@ from typing import cast
 
 from doc_forge.documents import (
     DocumentRecord,
-    DocumentStatus,
     DocumentType,
 )
 from doc_forge.processing.document_structure import (
@@ -434,7 +433,6 @@ def test_parse_document_structure_rejects_non_markdown_records() -> None:
         document_id="doc-1",
         corpus_id="corpus-a",
         filename="notes.pdf",
-        status=DocumentStatus.READY,
         document_type=cast(DocumentType, "pdf"),
         body="not markdown",
     )
@@ -452,7 +450,6 @@ def _document(body: str) -> DocumentRecord:
         document_id="doc-1",
         corpus_id="corpus-a",
         filename="notes.md",
-        status=DocumentStatus.READY,
         document_type=DocumentType.MARKDOWN,
         body=body,
     )

@@ -58,6 +58,16 @@ def test_markdown_ingestion_sets_document_type() -> None:
     assert document.document_type == DocumentType.MARKDOWN
 
 
+def test_markdown_ingestion_does_not_attach_lifecycle_status() -> None:
+    document = ingest_markdown_document(
+        corpus_id="corpus-a",
+        filename="notes.md",
+        raw_content=b"# Overview",
+    )
+
+    assert not hasattr(document, "status")
+
+
 def test_markdown_ingestion_rejects_invalid_utf8() -> None:
     with pytest.raises(InvalidDocumentEncoding):
         ingest_markdown_document(

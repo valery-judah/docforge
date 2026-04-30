@@ -12,7 +12,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-COPY pyproject.toml uv.lock README.md alembic.ini ./
+COPY pyproject.toml uv.lock README.md ./
 COPY scripts/container-log-wrapper.sh /usr/local/bin/container-log-wrapper.sh
 
 RUN --mount=type=cache,target=/tmp/.uv-cache \
@@ -34,5 +34,5 @@ USER doc-forge
 
 EXPOSE 8000
 
-ENTRYPOINT ["container-log-wrapper.sh", "python", "-m", "doc_forge.runtime"]
-CMD ["api"]
+ENTRYPOINT ["container-log-wrapper.sh"]
+CMD ["sh", "-c", "uvicorn doc_forge.app.api:app --host 0.0.0.0 --port ${PORT:-8000}"]

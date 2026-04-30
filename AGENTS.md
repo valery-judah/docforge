@@ -11,7 +11,7 @@
 - Prefer `uv run poe <task>` for defined developer workflows; otherwise use `uv run <tool>`.
 - Do not use `pip`, `python -m pip`, `poetry`, `pipenv`, `npm`, or `npx` for repo workflows.
 - Use `make` for local DevEx and infrastructure wrappers such as Docker, Docker Compose, observability stack operations, and docs harness helpers like `make workstream-new type=<work_type> slug=<slug>`, as defined in [`Makefile`](Makefile).
-- Common anchors: `uv sync`, `uv run poe verify`, `uv run poe run-api`, `uv run poe run-worker`, `make docker-up-build`, `make workstream-new type=feature slug=my-feature`.
+- Common anchors: `uv sync`, `uv run poe verify`, `uv run poe run-api`, `make docker-up-build`, `make workstream-new type=feature slug=my-feature`.
 - To inspect the current command surface directly, use `uv run poe --help` and `make help`.
 
 ## Validation

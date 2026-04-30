@@ -1,7 +1,6 @@
 .DEFAULT_GOAL := help
 
 -include .env
-export DATABASE_URL ?= postgresql+psycopg://doc-forge:doc-forge@localhost:5432/doc-forge
 export DOC_FORGE_ARTIFACT_ROOT ?= ./data
 export DOC_FORGE_ENVIRONMENT ?= dev
 
@@ -14,7 +13,7 @@ help: ## Show this help message
 	@echo "DevEx & Infrastructure Targets:"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-25s %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 	@echo ""
-	@echo "Note: Python lifecycle tasks (fmt, test, run-api, etc.) have been moved to poethepoet."
+	@echo "Note: Python app tasks (fmt, test, run-api, etc.) have been moved to poethepoet."
 	@echo "      Run 'uv run poe --help' or 'uv run poe <task>' to execute them."
 
 .PHONY: install-git-hooks
@@ -30,7 +29,7 @@ workstream-new: ## Create a new docs workstream with type=<work_type> slug=<slug
 	@docs/harness/scripts/new-workstream.sh "$(type)" "$(slug)"
 
 .PHONY: docker-build
-docker-build: ## Build the local Docker image for the split runtime
+docker-build: ## Build the local Docker image for the API runtime
 	$(DOCKER_COMPOSE) build
 
 .PHONY: docker-up
@@ -75,12 +74,7 @@ docker-logs: ## Show recent API logs from the Docker stack
 docker-log-index: ## Show repo-local archived container log locations
 	@echo "compose latest:"
 	@printf "  %s\n" "$(CURDIR)/data/logs/compose/latest/api.jsonl"
-	@printf "  %s\n" "$(CURDIR)/data/logs/compose/latest/worker.jsonl"
 	@echo "e2e latest root:"
 	@printf "  %s\n" "$(CURDIR)/data/logs/e2e/latest"
 	@echo "query context root:"
 	@printf "  %s\n" "$(CURDIR)/data/context/queries"
-
-.PHONY: docker-db-shell
-docker-db-shell: ## Open a psql shell inside the Docker Postgres service
-	$(DOCKER_COMPOSE) exec db psql -U "$${POSTGRES_USER:-doc-forge}" -d "$${POSTGRES_DB:-doc-forge}"

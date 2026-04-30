@@ -20,3 +20,13 @@ class InMemoryDocumentStore:
             raise DocumentNotFound
 
         return document
+
+    def snapshot(self) -> dict[str, dict[str, DocumentRecord]]:
+        return {
+            corpus_id: dict(documents) for corpus_id, documents in self._documents_by_corpus.items()
+        }
+
+    def restore(self, snapshot: dict[str, dict[str, DocumentRecord]]) -> None:
+        self._documents_by_corpus = {
+            corpus_id: dict(documents) for corpus_id, documents in snapshot.items()
+        }
