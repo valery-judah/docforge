@@ -4,7 +4,12 @@ from dataclasses import dataclass, field
 
 import pytest
 
-from doc_forge.documents import DocumentNotFound, DocumentRecord, DocumentType
+from doc_forge.documents import (
+    DocumentNotFound,
+    DocumentRecord,
+    DocumentType,
+)
+from doc_forge.embeddings import PassageEmbeddingRecord
 from doc_forge.services import (
     DocumentService,
     DocumentSummary,
@@ -16,23 +21,57 @@ from doc_forge.services import (
 class RecordingDocumentRepository:
     saved_documents: list[DocumentRecord] = field(default_factory=list)
 
-    def save(self, document: DocumentRecord) -> None:
-        self.saved_documents.append(document)
-
     def list_for_corpus(self, corpus_id: str) -> list[DocumentRecord]:
         return [document for document in self.saved_documents if document.corpus_id == corpus_id]
 
     def get(self, *, corpus_id: str, document_id: str) -> DocumentRecord:
-        for document in self.saved_documents:
+        for document in reversed(self.saved_documents):
             if document.corpus_id == corpus_id and document.document_id == document_id:
                 return document
 
         raise DocumentNotFound
 
 
-def test_document_service_saves_accepted_markdown_document() -> None:
-    repository = RecordingDocumentRepository()
-    service = DocumentService(repository)
+@dataclass
+class RecordingDocumentIngestionRepository:
+    documents: RecordingDocumentRepository
+    saved_embeddings: list[PassageEmbeddingRecord] = field(default_factory=list)
+
+    def save_document_with_embeddings(
+        self,
+        document: DocumentRecord,
+        embeddings: list[PassageEmbeddingRecord],
+    ) -> None:
+        self.documents.saved_documents.append(document)
+        self.saved_embeddings.extend(embeddings)
+
+
+class RecordingEmbeddingModel:
+    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+        return [[float(index), float(len(text))] for index, text in enumerate(texts)]
+
+
+class FailingEmbeddingModel:
+    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+        _ = texts
+        raise RuntimeError("embedding failed")
+
+
+def _service_with(
+    embedding_model: RecordingEmbeddingModel | FailingEmbeddingModel | None = None,
+) -> tuple[DocumentService, RecordingDocumentRepository, RecordingDocumentIngestionRepository]:
+    documents = RecordingDocumentRepository()
+    ingestion = RecordingDocumentIngestionRepository(documents)
+    service = DocumentService(
+        documents,
+        ingestion,
+        embedding_model or RecordingEmbeddingModel(),
+    )
+    return service, documents, ingestion
+
+
+def test_document_service_synchronously_ingests_markdown_document() -> None:
+    service, documents, ingestion = _service_with()
 
     document = service.ingest_markdown(
         IngestMarkdownDocumentCommand(
@@ -42,22 +81,60 @@ def test_document_service_saves_accepted_markdown_document() -> None:
         )
     )
 
-    saved_document = repository.saved_documents[0]
+    saved_document = documents.saved_documents[0]
     assert document == DocumentSummary(
         document_id=saved_document.document_id,
         corpus_id="corpus-a",
         filename="notes.md",
-        status=saved_document.status,
         document_type=DocumentType.MARKDOWN,
     )
     assert not hasattr(document, "body")
-    assert document.corpus_id == "corpus-a"
-    assert document.filename == "notes.md"
+    assert not hasattr(document, "status")
+    assert not hasattr(saved_document, "status")
+    assert [record.text for record in ingestion.saved_embeddings] == ["Body."]
+    assert ingestion.saved_embeddings[0].vector == (0.0, 5.0)
+
+
+def test_document_service_preserves_heading_context_and_passage_order() -> None:
+    service, _documents, ingestion = _service_with()
+
+    service.ingest_markdown(
+        IngestMarkdownDocumentCommand(
+            corpus_id="corpus-a",
+            filename="notes.md",
+            raw_content=(
+                b"# Guide\n\nOverview paragraph.\n\n## Details\n\n- first\n- second\n\nAfter list."
+            ),
+        )
+    )
+
+    assert [
+        (record.ordinal, record.text, record.heading_path) for record in ingestion.saved_embeddings
+    ] == [
+        (0, "Overview paragraph.", ("Guide",)),
+        (1, "- first\n- second", ("Guide", "Details")),
+        (2, "After list.", ("Guide", "Details")),
+    ]
+
+
+def test_document_service_embedding_failure_does_not_persist_partial_ingestion() -> None:
+    service, documents, ingestion = _service_with(FailingEmbeddingModel())
+
+    with pytest.raises(RuntimeError, match="embedding failed"):
+        service.ingest_markdown(
+            IngestMarkdownDocumentCommand(
+                corpus_id="corpus-a",
+                filename="notes.md",
+                raw_content=b"# Overview\n\nBody.",
+            )
+        )
+
+    assert documents.saved_documents == []
+    assert ingestion.saved_embeddings == []
 
 
 def test_document_service_lists_documents_by_corpus() -> None:
-    repository = RecordingDocumentRepository()
-    service = DocumentService(repository)
+    service, _documents, _ingestion = _service_with()
     corpus_document = service.ingest_markdown(
         IngestMarkdownDocumentCommand(
             corpus_id="corpus-a",
@@ -77,8 +154,7 @@ def test_document_service_lists_documents_by_corpus() -> None:
 
 
 def test_document_service_gets_document_by_corpus_and_id() -> None:
-    repository = RecordingDocumentRepository()
-    service = DocumentService(repository)
+    service, _documents, _ingestion = _service_with()
     document = service.ingest_markdown(
         IngestMarkdownDocumentCommand(
             corpus_id="corpus-a",

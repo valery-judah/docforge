@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from doc_forge.app.dependencies import get_document_service
 from doc_forge.documents import (
     DocumentNotFound,
-    DocumentStatus,
     DocumentType,
     InvalidDocumentEncoding,
     UnsupportedDocumentType,
@@ -31,7 +30,6 @@ class DocumentResponse(BaseModel):
     document_id: str
     corpus_id: str
     filename: str
-    status: DocumentStatus
     document_type: DocumentType
 
 

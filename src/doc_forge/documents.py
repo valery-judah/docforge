@@ -5,10 +5,6 @@ from enum import StrEnum
 from hashlib import sha256
 
 
-class DocumentStatus(StrEnum):
-    READY = "ready"
-
-
 class DocumentType(StrEnum):
     MARKDOWN = "markdown"
 
@@ -34,7 +30,6 @@ class DocumentRecord:
     document_id: str
     corpus_id: str
     filename: str
-    status: DocumentStatus
     document_type: DocumentType
     body: str
 
@@ -57,7 +52,6 @@ def ingest_markdown_document(
         ),
         corpus_id=corpus_id,
         filename=filename,
-        status=DocumentStatus.READY,
         document_type=DocumentType.MARKDOWN,
         body=body,
     )
