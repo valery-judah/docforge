@@ -11,6 +11,5 @@ latest_dir="${log_root}/latest"
 mkdir -p "$run_dir" "$latest_dir"
 
 ln -sfn "../runs/${run_id}/api.jsonl" "${latest_dir}/api.jsonl"
-ln -sfn "../runs/${run_id}/worker.jsonl" "${latest_dir}/worker.jsonl"
 
 printf '%s\n' "$run_id"
