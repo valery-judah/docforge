@@ -8,11 +8,15 @@ services:
     user: "${DOC_FORGE_UID:-1000}:${DOC_FORGE_GID:-1000}"
     environment:
       DOC_FORGE_ARTIFACT_ROOT: /artifacts
-      DOC_FORGE_EMBEDDING_BACKEND: ${DOC_FORGE_EMBEDDING_BACKEND:-deterministic}
-      DOC_FORGE_EMBEDDING_MODEL: ${DOC_FORGE_EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+      DOC_FORGE_EMBEDDING_MODEL: ${DOC_FORGE_EMBEDDING_MODEL:-deterministic}
       DOC_FORGE_SERVICE_NAME: doc_forge-api
       DOC_FORGE_JSON_LOG_PATH: /logs/compose/runs/${DOC_FORGE_LOG_RUN_ID:-manual}/api.jsonl
+      HF_HOME: ${HF_HOME:-/artifacts/huggingface}
+      HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}
       PORT: "8000"
+      TORCH_COMPILE_DISABLE: "1"
+      TORCHINDUCTOR_CACHE_DIR: /tmp/torch_cache
+      TRANSFORMERS_OFFLINE: ${TRANSFORMERS_OFFLINE:-0}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

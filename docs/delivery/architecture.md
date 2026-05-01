@@ -16,3 +16,10 @@ do not create a partial document record.
 
 The default app runtime uses in-memory repositories. Parsed document structure is
 an intermediate representation in this slice, not persisted state.
+
+Application composition lives in the FastAPI app boundary. `Settings` reads
+`DOC_FORGE_EMBEDDING_MODEL`, which accepts `deterministic` or `transformer`, and
+the dependency wiring constructs one embedding model singleton for
+`DocumentService`. The deterministic model is the default development runtime.
+Transformer mode uses the default sentence-transformers adapter and requires the
+optional LLM dependency group in the container image.

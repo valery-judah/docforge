@@ -32,6 +32,7 @@ _STATIC_DIR_TARGETS: tuple[CleanupTarget, ...] = (
 )
 
 _OPTIONAL_DIR_TARGETS: tuple[CleanupTarget, ...] = (
+    CleanupTarget("data/models", "dir", "prepared local embedding models"),
     CleanupTarget("data/huggingface", "dir", "downloaded local model cache"),
 )
 
@@ -46,6 +47,7 @@ _STATIC_FILE_GLOBS: tuple[CleanupTarget, ...] = (
 
 _SKIP_WALK_PREFIXES: tuple[Path, ...] = (
     Path(".git"),
+    Path("data/models"),
     Path("data/huggingface"),
 )
 
@@ -62,7 +64,7 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--include-model-cache",
         action="store_true",
-        help="Also remove data/huggingface if present.",
+        help="Also remove prepared local models and downloaded model caches if present.",
     )
     return parser.parse_args(list(argv))
 
