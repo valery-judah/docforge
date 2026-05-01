@@ -35,7 +35,7 @@ class RecordingDocumentRepository:
 @dataclass
 class RecordingDocumentIngestionRepository:
     documents: RecordingDocumentRepository
-    saved_embeddings: list[PassageEmbeddingRecord] = field(default_factory=list)
+    embeddings: RecordingEmbeddingRepository
 
     def save_document_with_embeddings(
         self,
@@ -43,7 +43,24 @@ class RecordingDocumentIngestionRepository:
         embeddings: list[PassageEmbeddingRecord],
     ) -> None:
         self.documents.saved_documents.append(document)
-        self.saved_embeddings.extend(embeddings)
+        self.embeddings.saved_embeddings.extend(embeddings)
+
+
+@dataclass
+class RecordingEmbeddingRepository:
+    saved_embeddings: list[PassageEmbeddingRecord] = field(default_factory=list)
+
+    def list_for_document(
+        self,
+        *,
+        corpus_id: str,
+        document_id: str,
+    ) -> list[PassageEmbeddingRecord]:
+        return [
+            record
+            for record in self.saved_embeddings
+            if record.corpus_id == corpus_id and record.document_id == document_id
+        ]
 
 
 class RecordingEmbeddingModel:
@@ -59,15 +76,17 @@ class FailingEmbeddingModel:
 
 def _service_with(
     embedding_model: RecordingEmbeddingModel | FailingEmbeddingModel | None = None,
-) -> tuple[DocumentService, RecordingDocumentRepository, RecordingDocumentIngestionRepository]:
+) -> tuple[DocumentService, RecordingDocumentRepository, RecordingEmbeddingRepository]:
     documents = RecordingDocumentRepository()
-    ingestion = RecordingDocumentIngestionRepository(documents)
+    embeddings = RecordingEmbeddingRepository()
+    ingestion = RecordingDocumentIngestionRepository(documents, embeddings)
     service = DocumentService(
         documents,
         ingestion,
+        embeddings,
         embedding_model or RecordingEmbeddingModel(),
     )
-    return service, documents, ingestion
+    return service, documents, embeddings
 
 
 def test_document_service_synchronously_ingests_markdown_document() -> None:
@@ -167,3 +186,58 @@ def test_document_service_gets_document_by_corpus_and_id() -> None:
 
     with pytest.raises(DocumentNotFound):
         service.get_document(corpus_id="corpus-b", document_id=document.document_id)
+
+
+def test_document_service_inspects_processed_document_structure_and_embeddings() -> None:
+    service, _documents, _embeddings = _service_with()
+    document = service.ingest_markdown(
+        IngestMarkdownDocumentCommand(
+            corpus_id="corpus-a",
+            filename="notes.md",
+            raw_content=(
+                b"# Guide\n\nIntro paragraph.\n\n## Setup\n\n- install\n- run\n\n```text\nok\n```"
+            ),
+        )
+    )
+
+    inspection = service.inspect_document(
+        corpus_id="corpus-a",
+        document_id=document.document_id,
+    )
+
+    assert inspection.document_id == document.document_id
+    assert inspection.body.startswith("# Guide")
+    assert [(section.heading_title, section.section_path) for section in inspection.sections] == [
+        ("Guide", ("Guide",)),
+        ("Setup", ("Guide", "Setup")),
+    ]
+    assert [
+        (
+            passage.kind,
+            passage.text,
+            passage.start_line,
+            passage.end_line,
+            passage.heading_path,
+            passage.embedding.vector_dimensions if passage.embedding else None,
+        )
+        for section in inspection.sections
+        for passage in section.passages
+    ] == [
+        ("paragraph", "Intro paragraph.", 3, 3, ("Guide",), 2),
+        ("list", "- install\n- run", 7, 8, ("Guide", "Setup"), 2),
+        ("code", "```text\nok\n```", 10, 12, ("Guide", "Setup"), 2),
+    ]
+
+
+def test_document_service_inspection_lookup_is_limited_to_corpus() -> None:
+    service, _documents, _embeddings = _service_with()
+    document = service.ingest_markdown(
+        IngestMarkdownDocumentCommand(
+            corpus_id="corpus-a",
+            filename="notes.md",
+            raw_content=b"# Overview\n\nBody.",
+        )
+    )
+
+    with pytest.raises(DocumentNotFound):
+        service.inspect_document(corpus_id="corpus-b", document_id=document.document_id)

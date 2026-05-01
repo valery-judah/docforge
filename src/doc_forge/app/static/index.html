@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DocForge</title>
+    <link rel="stylesheet" href="/ui/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>DocForge</h1>
+          <p id="status" class="status" role="status">Ready</p>
+        </div>
+        <form id="corpus-form" class="corpus-form">
+          <label for="corpus-id">Corpus</label>
+          <input id="corpus-id" name="corpus-id" autocomplete="off" value="default" />
+          <button type="submit">Refresh</button>
+        </form>
+      </header>
+
+      <section class="workspace">
+        <aside class="sidebar" aria-label="Documents">
+          <form id="upload-form" class="upload-form">
+            <label class="file-picker">
+              <span>Markdown</span>
+              <input id="file" name="file" type="file" accept=".md,.markdown,text/markdown" />
+            </label>
+            <button type="submit">Upload</button>
+          </form>
+          <div class="panel-heading">
+            <h2>Documents</h2>
+            <span id="document-count">0</span>
+          </div>
+          <div id="document-list" class="document-list"></div>
+        </aside>
+
+        <section class="detail" aria-label="Document inspection">
+          <div class="document-header">
+            <div>
+              <h2 id="document-title">No document selected</h2>
+              <p id="document-meta" class="muted"></p>
+            </div>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Document views">
+            <button class="tab active" type="button" data-view="structure">Structure</button>
+            <button class="tab" type="button" data-view="raw">Raw</button>
+          </div>
+
+          <div id="structure-view" class="view active">
+            <div id="structure"></div>
+          </div>
+          <div id="raw-view" class="view">
+            <pre id="raw-body" class="raw"></pre>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/ui/static/app.js"></script>
+  </body>
+</html>

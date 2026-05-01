@@ -26,7 +26,7 @@ def client() -> Iterator[TestClient]:
         documents=documents,
         embeddings=embeddings,
     )
-    service = DocumentService(documents, ingestion, DeterministicEmbeddingModel())
+    service = DocumentService(documents, ingestion, embeddings, DeterministicEmbeddingModel())
     app.dependency_overrides[get_document_service] = lambda: service
     with TestClient(app) as test_client:
         yield test_client
@@ -39,6 +39,28 @@ def test_package_imports() -> None:
 
 def test_readyz_payload() -> None:
     assert readyz() == {"status": "ok"}
+
+
+def test_root_redirects_to_web_ui(client: TestClient) -> None:
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "DocForge" in response.text
+
+
+def test_web_ui_is_served(client: TestClient) -> None:
+    response = client.get("/ui")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "DocForge" in response.text
+
+
+def test_web_ui_static_asset_is_served(client: TestClient) -> None:
+    response = client.get("/ui/static/app.js")
+
+    assert response.status_code == 200
+    assert "loadDocuments" in response.text
 
 
 def test_create_app_defers_runtime_validation_until_lifespan(tmp_path: Path) -> None:
@@ -111,6 +133,49 @@ def test_markdown_document_can_be_read_from_its_corpus(client: TestClient) -> No
     assert response.json()["document_id"] == document_id
 
 
+def test_markdown_document_inspection_returns_structure_and_embedding_metadata(
+    client: TestClient,
+) -> None:
+    upload_response = client.post(
+        "/corpora/research/documents",
+        files={
+            "file": (
+                "paper.markdown",
+                b"# Findings\n\nEvidence.\n\n## Setup\n\n- install\n- run",
+                "text/markdown",
+            )
+        },
+    )
+    document_id = upload_response.json()["document_id"]
+
+    response = client.get(f"/corpora/research/documents/{document_id}/inspection")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["document_id"] == document_id
+    assert payload["body"].startswith("# Findings")
+    assert [
+        (section["heading_title"], section["section_path"]) for section in payload["sections"]
+    ] == [
+        ("Findings", ["Findings"]),
+        ("Setup", ["Findings", "Setup"]),
+    ]
+    assert [
+        (
+            passage["kind"],
+            passage["text"],
+            passage["start_line"],
+            passage["end_line"],
+            passage["embedding"]["vector_dimensions"],
+        )
+        for section in payload["sections"]
+        for passage in section["passages"]
+    ] == [
+        ("paragraph", "Evidence.", 3, 3, 8),
+        ("list", "- install\n- run", 7, 8, 8),
+    ]
+
+
 def test_document_lookup_is_limited_to_corpus(client: TestClient) -> None:
     upload_response = client.post(
         "/corpora/corpus-a/documents",
@@ -121,6 +186,10 @@ def test_document_lookup_is_limited_to_corpus(client: TestClient) -> None:
     response = client.get(f"/corpora/corpus-b/documents/{document_id}")
 
     assert response.status_code == 404
+
+    inspection_response = client.get(f"/corpora/corpus-b/documents/{document_id}/inspection")
+
+    assert inspection_response.status_code == 404
 
 
 def test_rejects_non_markdown_upload(client: TestClient) -> None:

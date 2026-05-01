@@ -53,6 +53,7 @@ def _create_document_service(settings: Settings) -> DocumentService:
     return DocumentService(
         document_repository=document_repository,
         document_ingestion_repository=document_ingestion_repository,
+        embedding_repository=embedding_repository,
         embedding_model=embedding_model,
     )
 

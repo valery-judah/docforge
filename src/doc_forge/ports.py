@@ -12,6 +12,15 @@ class DocumentRepository(Protocol):
     def get(self, *, corpus_id: str, document_id: str) -> DocumentRecord: ...
 
 
+class EmbeddingRepository(Protocol):
+    def list_for_document(
+        self,
+        *,
+        corpus_id: str,
+        document_id: str,
+    ) -> list[PassageEmbeddingRecord]: ...
+
+
 class DocumentIngestionRepository(Protocol):
     def save_document_with_embeddings(
         self,
