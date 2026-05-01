@@ -21,8 +21,9 @@ Application composition lives in the FastAPI app boundary. The runtime entrypoin
 uses the `create_app` factory, and FastAPI lifespan startup creates one
 application container holding validated `Settings` plus the singleton
 `DocumentService`. `DOC_FORGE_EMBEDDING_MODEL` accepts `deterministic` or
-`transformer`; deterministic is the default runtime. Transformer mode uses the
-default sentence-transformers adapter and requires the optional LLM dependency
-group. Hugging Face and Torch cache directories default under
+`transformer`; transformer is the default runtime. Transformer mode uses the
+default sentence-transformers adapter. Compose builds the default image with the
+LLM dependency group so the default runtime has that backend installed. Hugging
+Face and Torch cache directories default under
 `DOC_FORGE_ARTIFACT_ROOT`; startup preflight validates those paths before model
 construction.

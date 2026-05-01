@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     artifact_root: Path = Path("./data")
     service_name: str = "doc_forge-api"
     json_log_path: Path | None = None
-    embedding_model: EmbeddingModelRegime = EmbeddingModelRegime.DETERMINISTIC
+    embedding_model: EmbeddingModelRegime = EmbeddingModelRegime.TRANSFORMER
     hf_home: Path | None = None
     torchinductor_cache_dir: Path | None = None
     hf_hub_offline: bool = False

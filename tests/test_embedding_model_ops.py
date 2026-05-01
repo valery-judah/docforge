@@ -61,7 +61,8 @@ def test_repo_clean_model_cache_targets_are_opt_in(tmp_path) -> None:
 def test_compose_exposes_local_model_runtime_env() -> None:
     compose = Path("docker-compose.yml").read_text(encoding="utf-8")
 
-    assert ("DOC_FORGE_EMBEDDING_MODEL: ${DOC_FORGE_EMBEDDING_MODEL:-deterministic}") in compose
+    assert "DOC_FORGE_UV_SYNC_GROUPS: ${DOC_FORGE_UV_SYNC_GROUPS:---group llm}" in compose
+    assert ("DOC_FORGE_EMBEDDING_MODEL: ${DOC_FORGE_EMBEDDING_MODEL:-transformer}") in compose
     assert "DOC_FORGE_HF_HOME: ${DOC_FORGE_HF_HOME:-/artifacts/huggingface}" in compose
     assert "DOC_FORGE_HF_HUB_OFFLINE: ${DOC_FORGE_HF_HUB_OFFLINE:-0}" in compose
     assert (

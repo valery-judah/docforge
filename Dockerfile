@@ -13,7 +13,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
-ARG DOC_FORGE_UV_SYNC_GROUPS=""
+ARG DOC_FORGE_UV_SYNC_GROUPS="--group llm"
 
 COPY pyproject.toml uv.lock README.md ./
 COPY scripts/container-log-wrapper.sh /usr/local/bin/container-log-wrapper.sh

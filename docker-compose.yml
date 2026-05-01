@@ -3,12 +3,12 @@ services:
     build:
       context: .
       args:
-        DOC_FORGE_UV_SYNC_GROUPS: ${DOC_FORGE_UV_SYNC_GROUPS:-}
+        DOC_FORGE_UV_SYNC_GROUPS: ${DOC_FORGE_UV_SYNC_GROUPS:---group llm}
     init: true
     user: "${DOC_FORGE_UID:-1000}:${DOC_FORGE_GID:-1000}"
     environment:
       DOC_FORGE_ARTIFACT_ROOT: /artifacts
-      DOC_FORGE_EMBEDDING_MODEL: ${DOC_FORGE_EMBEDDING_MODEL:-deterministic}
+      DOC_FORGE_EMBEDDING_MODEL: ${DOC_FORGE_EMBEDDING_MODEL:-transformer}
       DOC_FORGE_SERVICE_NAME: doc_forge-api
       DOC_FORGE_JSON_LOG_PATH: /logs/compose/runs/${DOC_FORGE_LOG_RUN_ID:-manual}/api.jsonl
       DOC_FORGE_HF_HOME: ${DOC_FORGE_HF_HOME:-/artifacts/huggingface}

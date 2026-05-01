@@ -7,6 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from doc_forge import __version__
+from doc_forge.app import dependencies
 from doc_forge.app.api import create_app, readyz
 from doc_forge.app.dependencies import get_document_service
 from doc_forge.app.settings import Settings
@@ -19,7 +20,7 @@ from doc_forge.services import DocumentService
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
-    app = create_app(Settings(_env_file=None))
+    app = create_app(Settings(embedding_model="deterministic", _env_file=None))
     documents = InMemoryDocumentStore()
     embeddings = InMemoryEmbeddingStore()
     ingestion = InMemoryDocumentIngestionRepository(
@@ -80,7 +81,7 @@ def test_create_app_defers_runtime_validation_until_lifespan(tmp_path: Path) -> 
 
 
 def test_lifespan_created_service_handles_documents() -> None:
-    app = create_app(Settings(_env_file=None))
+    app = create_app(Settings(embedding_model="deterministic", _env_file=None))
 
     with TestClient(app) as client:
         upload_response = client.post(
@@ -94,6 +95,31 @@ def test_lifespan_created_service_handles_documents() -> None:
     assert upload_response.status_code == 201
     assert response.status_code == 200
     assert response.json()["document_id"] == document_id
+
+
+def test_default_embedding_model_uses_transformer_mode(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    created_transformer_models = 0
+
+    class FakeTransformerEmbeddingModel:
+        def __init__(self) -> None:
+            nonlocal created_transformer_models
+            created_transformer_models += 1
+
+        def embed_texts(self, texts: list[str]) -> list[list[float]]:
+            return [[] for _text in texts]
+
+    monkeypatch.setattr(
+        dependencies,
+        "SentenceTransformerEmbeddingModel",
+        FakeTransformerEmbeddingModel,
+    )
+
+    model = dependencies._create_embedding_model(Settings(_env_file=None))
+
+    assert isinstance(model, FakeTransformerEmbeddingModel)
+    assert created_transformer_models == 1
 
 
 def test_upload_markdown_document(client: TestClient) -> None:

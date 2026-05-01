@@ -15,7 +15,7 @@ make docker-down
 Use `uv` for host environment management and Poe for Python developer tasks:
 
 ```bash
-uv sync
+uv sync --group llm
 uv run poe fmt
 uv run poe lint
 uv run poe type
@@ -81,11 +81,12 @@ it probes `127.0.0.1`, `host.docker.internal`, and `172.17.0.1` using the
 configured `PORT`. Compose also exposes the API as `api:8000` and
 `docforge-api:8000` for container-to-container calls.
 
-For sentence-transformer-backed Docker runs, build the image with the optional
-LLM dependency group:
+Compose builds the default image with the LLM dependency group because
+sentence-transformer-backed embeddings are the default runtime mode. To force the
+deterministic development model:
 
 ```bash
-DOC_FORGE_UV_SYNC_GROUPS="--group llm" \
-DOC_FORGE_EMBEDDING_MODEL=transformer \
+DOC_FORGE_UV_SYNC_GROUPS="" \
+DOC_FORGE_EMBEDDING_MODEL=deterministic \
 make docker-up-build
 ```

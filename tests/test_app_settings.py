@@ -8,16 +8,16 @@ from pydantic import ValidationError
 from doc_forge.app.settings import EmbeddingModelRegime, Settings
 
 
-def test_settings_defaults_to_deterministic_embedding_model() -> None:
+def test_settings_defaults_to_transformer_embedding_model() -> None:
     settings = Settings(_env_file=None)
 
-    assert settings.embedding_model is EmbeddingModelRegime.DETERMINISTIC
-
-
-def test_settings_supports_transformer_embedding_model() -> None:
-    settings = Settings(embedding_model="transformer", _env_file=None)
-
     assert settings.embedding_model is EmbeddingModelRegime.TRANSFORMER
+
+
+def test_settings_supports_deterministic_embedding_model() -> None:
+    settings = Settings(embedding_model="deterministic", _env_file=None)
+
+    assert settings.embedding_model is EmbeddingModelRegime.DETERMINISTIC
 
 
 def test_settings_rejects_unknown_embedding_model() -> None:
@@ -32,6 +32,7 @@ def test_settings_models_current_runtime_defaults() -> None:
     assert settings.artifact_root == Path("./data")
     assert settings.service_name == "doc_forge-api"
     assert settings.json_log_path is None
+    assert settings.embedding_model is EmbeddingModelRegime.TRANSFORMER
     assert settings.hf_home == Path("data/huggingface")
     assert settings.torchinductor_cache_dir == Path("data/torchinductor-cache")
     assert settings.hf_hub_offline is False
@@ -97,7 +98,7 @@ def test_settings_safe_summary_redacts_transformer_cache_paths(tmp_path: Path) -
         "artifact_root": "data",
         "service_name": "doc_forge-api",
         "json_log_path": None,
-        "embedding_model": "deterministic",
+        "embedding_model": "transformer",
         "hf_home_configured": True,
         "torchinductor_cache_dir_configured": True,
         "hf_hub_offline": False,
