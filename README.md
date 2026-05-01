@@ -12,6 +12,13 @@ curl "$(make docker-url)/readyz"
 make docker-down
 ```
 
+Use the playground script to start the app and load a couple of Markdown
+documents for UI exploration:
+
+```bash
+./scripts/dev.sh up-demo
+```
+
 Use `uv` for host environment management and Poe for Python developer tasks:
 
 ```bash
@@ -90,3 +97,34 @@ DOC_FORGE_UV_SYNC_GROUPS="" \
 DOC_FORGE_EMBEDDING_MODEL=deterministic \
 make docker-up-build
 ```
+
+## UI Playground
+
+Start the Docker app and seed demo Markdown documents:
+
+```bash
+./scripts/dev.sh up-demo
+```
+
+The script uploads `evals/corpus/research-notes-1.md` and
+`evals/corpus/config-reference-1.md` into the `default` corpus, then verifies
+each upload through the document inspection endpoint. Open the printed `/ui`
+URL to inspect the processed document structure and embedding metadata.
+
+Seed an already-running app:
+
+```bash
+./scripts/dev.sh seed-demo
+```
+
+Reset the Docker runtime and reseed demo documents:
+
+```bash
+./scripts/dev.sh reset-demo
+```
+
+The current runtime stores documents in memory, so demo data is attached to the
+running API process. Reseed after restarting the app. Override
+`DOC_FORGE_DEMO_CORPUS_ID`, `DOC_FORGE_DEMO_DOCS`, or
+`DOC_FORGE_API_BASE_URL` when you need a different corpus, document set, or API
+target.
