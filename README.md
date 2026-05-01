@@ -67,7 +67,7 @@ it probes `127.0.0.1`, `host.docker.internal`, and `172.17.0.1` using the
 configured `PORT`. Compose also exposes the API as `api:8000` and
 `docforge-api:8000` for container-to-container calls.
 
-For sentence-transformer-backed local runs, build the image with the optional
+For sentence-transformer-backed Docker runs, build the image with the optional
 LLM dependency group:
 
 ```bash
