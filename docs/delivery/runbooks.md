@@ -19,6 +19,7 @@ configuration:
 ```bash
 curl "$(make docker-url)/readyz"
 docker compose exec -T api env | sort | rg 'DOC_FORGE_EMBEDDING_MODEL|TRANSFORMERS_OFFLINE|HF_HUB_OFFLINE|HF_HOME|TORCHINDUCTOR_CACHE_DIR'
+docker compose exec -T api python -c 'import doc_forge; print("python runtime ok")'
 ```
 
 `DOC_FORGE_EMBEDDING_MODEL` selects the embedding regime and accepts
@@ -29,6 +30,11 @@ the first online container run can populate the mounted cache.
 startup preflight validates these Docker-provided cache paths before loading the
 transformer model. Set `TRANSFORMERS_OFFLINE=1` and `HF_HUB_OFFLINE=1` only
 after the model is available in the mounted Hugging Face cache.
+
+The API container runtime does not include `uv`. Use `python` for container
+diagnostics; reserve `uv run ...` for host-side developer workflows. Make passes
+the host UID/GID into Compose so bind-mounted artifacts, logs, and downloaded
+model cache files remain editable from the host.
 
 `/readyz` is the health endpoint. `/health` is not currently defined.
 

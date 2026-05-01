@@ -3,6 +3,8 @@
 -include .env
 export DOC_FORGE_ARTIFACT_ROOT ?= ./data
 export DOC_FORGE_ENVIRONMENT ?= dev
+export DOC_FORGE_UID ?= $(shell id -u)
+export DOC_FORGE_GID ?= $(shell id -g)
 
 DOCKER_COMPOSE ?= docker compose
 

@@ -4,7 +4,15 @@ DocForge Python service scaffold.
 
 ## Command Model
 
-Use `uv` for environment management and Poe for Python developer tasks:
+Use Docker Compose for the default application runtime:
+
+```bash
+make docker-up-build
+curl "$(make docker-url)/readyz"
+make docker-down
+```
+
+Use `uv` for host environment management and Poe for Python developer tasks:
 
 ```bash
 uv sync
@@ -42,6 +50,10 @@ curl "$(make docker-url)/readyz"
 make docker-down
 ```
 
+The Docker image uses `uv` only while building the locked virtual environment.
+The final runtime container does not include or invoke `uv`; use `python` for
+any in-container diagnostics.
+
 Use `PORT` to change the host port while the container continues to listen on
 port `8000`:
 
@@ -51,7 +63,9 @@ curl http://127.0.0.1:8080/readyz
 ```
 
 Runtime artifacts are mounted at `./data` on the host and `/artifacts` in the
-container. Compose JSON logs are archived under `./data/logs/compose`.
+container. Compose JSON logs are archived under `./data/logs/compose`. Make
+passes the host UID/GID into Compose so files created in these bind mounts stay
+editable by the local user.
 
 Local clients should avoid assuming that `localhost` means the Docker host.
 Use the discovery helper when a command may run from either the host shell or a

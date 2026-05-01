@@ -13,6 +13,7 @@ services:
       DOC_FORGE_JSON_LOG_PATH: /logs/compose/runs/${DOC_FORGE_LOG_RUN_ID:-manual}/api.jsonl
       HF_HOME: ${HF_HOME:-/artifacts/huggingface}
       HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}
+      HOME: /tmp
       PORT: "8000"
       TORCH_COMPILE_DISABLE: "1"
       TORCHINDUCTOR_CACHE_DIR: /tmp/torch_cache
