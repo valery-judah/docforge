@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, UploadFile, status
 from pydantic import BaseModel
 
-from doc_forge.app.dependencies import get_document_service
+from doc_forge.app.dependencies import create_app_container, get_document_service
+from doc_forge.app.settings import Settings
 from doc_forge.documents import (
     DocumentNotFound,
     DocumentType,
@@ -18,10 +21,24 @@ from doc_forge.services import (
     IngestMarkdownDocumentCommand,
 )
 
-app = FastAPI(title="DocForge")
+router = APIRouter()
 
 
-@app.get("/readyz")
+def create_app(settings: Settings | None = None) -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        app.state.container = create_app_container(settings)
+        try:
+            yield
+        finally:
+            app.state.container = None
+
+    app = FastAPI(title="DocForge", lifespan=lifespan)
+    app.include_router(router)
+    return app
+
+
+@router.get("/readyz")
 def readyz() -> dict[str, str]:
     return {"status": "ok"}
 
@@ -33,7 +50,7 @@ class DocumentResponse(BaseModel):
     document_type: DocumentType
 
 
-@app.post(
+@router.post(
     "/corpora/{corpus_id}/documents",
     response_model=DocumentResponse,
     status_code=status.HTTP_201_CREATED,
@@ -67,7 +84,7 @@ async def upload_markdown_document(
     return document
 
 
-@app.get("/corpora/{corpus_id}/documents", response_model=list[DocumentResponse])
+@router.get("/corpora/{corpus_id}/documents", response_model=list[DocumentResponse])
 def list_documents(
     corpus_id: str,
     document_service: Annotated[DocumentService, Depends(get_document_service)],
@@ -75,7 +92,7 @@ def list_documents(
     return document_service.list_documents(corpus_id=corpus_id)
 
 
-@app.get("/corpora/{corpus_id}/documents/{document_id}", response_model=DocumentResponse)
+@router.get("/corpora/{corpus_id}/documents/{document_id}", response_model=DocumentResponse)
 def get_document(
     corpus_id: str,
     document_id: str,
