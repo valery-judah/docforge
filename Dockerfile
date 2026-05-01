@@ -13,16 +13,18 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+ARG DOC_FORGE_UV_SYNC_GROUPS=""
+
 COPY pyproject.toml uv.lock README.md ./
 COPY scripts/container-log-wrapper.sh /usr/local/bin/container-log-wrapper.sh
 
 RUN --mount=type=cache,target=/tmp/.uv-cache \
-    uv sync --frozen --no-dev --no-install-project
+    uv sync --frozen --no-dev --no-install-project ${DOC_FORGE_UV_SYNC_GROUPS}
 
 COPY src ./src
 
 RUN --mount=type=cache,target=/tmp/.uv-cache \
-    uv sync --frozen --no-dev \
+    uv sync --frozen --no-dev ${DOC_FORGE_UV_SYNC_GROUPS} \
     && groupadd --system --gid 1000 doc-forge \
     && useradd --system --uid 1000 --gid 1000 --create-home --home-dir /home/doc-forge doc-forge \
     && install -d --owner=doc-forge --group=doc-forge /artifacts \

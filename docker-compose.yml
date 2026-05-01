@@ -1,18 +1,29 @@
 services:
   api:
-    build: .
+    build:
+      context: .
+      args:
+        DOC_FORGE_UV_SYNC_GROUPS: ${DOC_FORGE_UV_SYNC_GROUPS:-}
     init: true
     user: "${DOC_FORGE_UID:-1000}:${DOC_FORGE_GID:-1000}"
     environment:
       DOC_FORGE_ARTIFACT_ROOT: /artifacts
+      DOC_FORGE_EMBEDDING_BACKEND: ${DOC_FORGE_EMBEDDING_BACKEND:-deterministic}
+      DOC_FORGE_EMBEDDING_MODEL: ${DOC_FORGE_EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
       DOC_FORGE_SERVICE_NAME: doc_forge-api
       DOC_FORGE_JSON_LOG_PATH: /logs/compose/runs/${DOC_FORGE_LOG_RUN_ID:-manual}/api.jsonl
       PORT: "8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/artifacts
       - ./data/logs:/logs
     ports:
       - "${PORT:-8000}:8000"
+    networks:
+      default:
+        aliases:
+          - docforge-api
     healthcheck:
       test:
         [

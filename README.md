@@ -38,7 +38,7 @@ Build and run the API container through Compose:
 
 ```bash
 make docker-up-build
-curl http://127.0.0.1:8000/readyz
+curl "$(make docker-url)/readyz"
 make docker-down
 ```
 
@@ -52,3 +52,26 @@ curl http://127.0.0.1:8080/readyz
 
 Runtime artifacts are mounted at `./data` on the host and `/artifacts` in the
 container. Compose JSON logs are archived under `./data/logs/compose`.
+
+Local clients should avoid assuming that `localhost` means the Docker host.
+Use the discovery helper when a command may run from either the host shell or a
+containerized development shell:
+
+```bash
+uv run python -m doc_forge.devtools.api_discovery
+scripts/devex/resolve_api_base_url.py
+```
+
+The resolver checks `DOC_FORGE_API_BASE_URL` first. Without an explicit value,
+it probes `127.0.0.1`, `host.docker.internal`, and `172.17.0.1` using the
+configured `PORT`. Compose also exposes the API as `api:8000` and
+`docforge-api:8000` for container-to-container calls.
+
+For sentence-transformer-backed local runs, build the image with the optional
+LLM dependency group:
+
+```bash
+DOC_FORGE_UV_SYNC_GROUPS="--group llm" \
+DOC_FORGE_EMBEDDING_BACKEND=sentence-transformers \
+make docker-up-build
+```

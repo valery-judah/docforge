@@ -68,6 +68,10 @@ observability-down: ## Stop the central eval/log observability stack
 docker-logs: ## Show recent API logs from the Docker stack
 	$(DOCKER_COMPOSE) logs --tail=120 api
 
+.PHONY: docker-url
+docker-url: ## Resolve the reachable local API base URL
+	@uv run python -m doc_forge.devtools.api_discovery
+
 .PHONY: docker-log-index
 docker-log-index: ## Show repo-local archived container log locations
 	@echo "compose latest:"
