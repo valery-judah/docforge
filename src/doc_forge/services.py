@@ -7,8 +7,9 @@ from doc_forge.documents import (
     DocumentType,
     ingest_markdown_document,
 )
-from doc_forge.embeddings import PassageEmbeddingRecord
-from doc_forge.ports import DocumentIngestionRepository, DocumentRepository, EmbeddingModel
+from doc_forge.embedding.contracts import EmbeddingModel
+from doc_forge.embedding.records import PassageEmbeddingRecord
+from doc_forge.ports import DocumentIngestionRepository, DocumentRepository
 from doc_forge.processing.document_structure import parse_document_structure
 
 

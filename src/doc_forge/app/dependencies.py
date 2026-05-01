@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from doc_forge.app.settings import EmbeddingModelRegime, get_settings
-from doc_forge.embeddings import DeterministicEmbeddingModel, SentenceTransformerEmbeddingModel
+from doc_forge.embedding.contracts import EmbeddingModel
+from doc_forge.embedding.deterministic import DeterministicEmbeddingModel
+from doc_forge.embedding.sentence_transformer import SentenceTransformerEmbeddingModel
 from doc_forge.persistence.in_memory_documents import InMemoryDocumentStore
 from doc_forge.persistence.in_memory_embeddings import InMemoryEmbeddingStore
 from doc_forge.persistence.in_memory_ingestion import InMemoryDocumentIngestionRepository
-from doc_forge.ports import EmbeddingModel
 from doc_forge.services import DocumentService
 
 _document_repository = InMemoryDocumentStore()

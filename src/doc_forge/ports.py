@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from doc_forge.documents import DocumentRecord
-from doc_forge.embeddings import PassageEmbeddingRecord
+from doc_forge.embedding.records import PassageEmbeddingRecord
 
 
 class DocumentRepository(Protocol):
@@ -18,7 +18,3 @@ class DocumentIngestionRepository(Protocol):
         document: DocumentRecord,
         embeddings: list[PassageEmbeddingRecord],
     ) -> None: ...
-
-
-class EmbeddingModel(Protocol):
-    def embed_texts(self, texts: list[str]) -> list[list[float]]: ...

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from doc_forge.embeddings import PassageEmbeddingRecord
+from doc_forge.embedding.records import PassageEmbeddingRecord
 
 
 class InMemoryEmbeddingStore:

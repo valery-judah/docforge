@@ -3,7 +3,7 @@ from __future__ import annotations
 from threading import Lock
 
 from doc_forge.documents import DocumentRecord
-from doc_forge.embeddings import PassageEmbeddingRecord
+from doc_forge.embedding.records import PassageEmbeddingRecord
 from doc_forge.persistence.in_memory_documents import InMemoryDocumentStore
 from doc_forge.persistence.in_memory_embeddings import InMemoryEmbeddingStore
 

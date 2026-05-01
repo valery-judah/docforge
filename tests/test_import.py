@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from doc_forge import __version__
 from doc_forge.app.api import app, readyz
 from doc_forge.app.dependencies import get_document_service
-from doc_forge.embeddings import DeterministicEmbeddingModel
+from doc_forge.embedding.deterministic import DeterministicEmbeddingModel
 from doc_forge.persistence.in_memory_documents import InMemoryDocumentStore
 from doc_forge.persistence.in_memory_embeddings import InMemoryEmbeddingStore
 from doc_forge.persistence.in_memory_ingestion import InMemoryDocumentIngestionRepository

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from doc_forge.embeddings import SentenceTransformerEmbeddingModel
+from doc_forge.embedding import EmbeddingModel
+from doc_forge.embedding.deterministic import DeterministicEmbeddingModel
+from doc_forge.embedding.sentence_transformer import SentenceTransformerEmbeddingModel
 
 
 class _FakeSentenceTransformerModel:
@@ -40,3 +42,13 @@ def test_sentence_transformer_embedding_model_uses_loader_and_coerces_vectors() 
     assert seen_model_names == ["sentence-transformers/test-model"]
     assert fake_model.calls == [["alpha", "beta"]]
     assert vectors == [[0.5, -0.25], [1.0, 2.5]]
+
+
+def test_embedding_models_expose_embedding_contract() -> None:
+    fake_model = _FakeSentenceTransformerModel()
+
+    deterministic_model = DeterministicEmbeddingModel()
+    transformer_model = SentenceTransformerEmbeddingModel(loader=lambda _model_name: fake_model)
+
+    assert isinstance(deterministic_model, EmbeddingModel)
+    assert isinstance(transformer_model, EmbeddingModel)
