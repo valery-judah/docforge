@@ -72,6 +72,14 @@ docker-logs: ## Show recent API logs from the Docker stack
 docker-url: ## Resolve the reachable local API base URL
 	@uv run python -m doc_forge.devtools.api_discovery
 
+.PHONY: embedding-model-prepare
+embedding-model-prepare: ## Prepare a local sentence-transformers model with model=<model_id>
+	@if [ -z "$(model)" ]; then \
+		echo "Usage: make embedding-model-prepare model=sentence-transformers/all-MiniLM-L6-v2" >&2; \
+		exit 1; \
+	fi
+	uv run python -m doc_forge.devtools.embedding_models "$(model)"
+
 .PHONY: docker-log-index
 docker-log-index: ## Show repo-local archived container log locations
 	@echo "compose latest:"

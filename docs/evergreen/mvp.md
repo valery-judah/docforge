@@ -4,17 +4,7 @@
 
 `mvp-0` is the smallest executable delivery slice for the document question-answering MVP.
 
-It proves one end-to-end product invariant over Markdown files:
-
-```text
-uploaded Markdown
-  -> accepted document in a query scope
-  -> corpus-scoped retrieval
-  
-query lifecycle
-  -> grounded answer or abstention
-  -> inspectable Markdown source reference
-```
+It proves one end-to-end product invariant over Markdown files.
 
 `mvp-0` is not the full MVP. It excludes PDFs, mixed-format corpora, partial-support handling, ambiguity handling, advanced retrieval, production observability, rich UI, and full evaluation infrastructure.
 
@@ -148,7 +138,7 @@ The exact API routes are not prescribed here. `docs/evergreen/api-contracts.md` 
 
 ## 8. Delivery Design Notes
 
-Implementation-level details for the current delivery slice live in `docs/delivery/design.md`.
+Implementation-level details for the current delivery slice live in `docs/delivery/architecture.md`.
 
 
 ## 10. Exit Criteria

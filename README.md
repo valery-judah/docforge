@@ -72,6 +72,6 @@ LLM dependency group:
 
 ```bash
 DOC_FORGE_UV_SYNC_GROUPS="--group llm" \
-DOC_FORGE_EMBEDDING_BACKEND=sentence-transformers \
+DOC_FORGE_EMBEDDING_MODEL=transformer \
 make docker-up-build
 ```
