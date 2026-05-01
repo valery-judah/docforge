@@ -61,7 +61,15 @@ def test_repo_clean_model_cache_targets_are_opt_in(tmp_path) -> None:
 def test_compose_exposes_local_model_runtime_env() -> None:
     compose = Path("docker-compose.yml").read_text(encoding="utf-8")
 
-    assert "HF_HOME: ${HF_HOME:-/artifacts/huggingface}" in compose
-    assert "HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}" in compose
-    assert "TRANSFORMERS_OFFLINE: ${TRANSFORMERS_OFFLINE:-0}" in compose
-    assert "DOC_FORGE_EMBEDDING_MODEL: ${DOC_FORGE_EMBEDDING_MODEL:-deterministic}" in compose
+    assert ("DOC_FORGE_EMBEDDING_MODEL: ${DOC_FORGE_EMBEDDING_MODEL:-deterministic}") in compose
+    assert "DOC_FORGE_HF_HOME: ${DOC_FORGE_HF_HOME:-/artifacts/huggingface}" in compose
+    assert "DOC_FORGE_HF_HUB_OFFLINE: ${DOC_FORGE_HF_HUB_OFFLINE:-0}" in compose
+    assert (
+        "DOC_FORGE_TORCHINDUCTOR_CACHE_DIR: "
+        "${DOC_FORGE_TORCHINDUCTOR_CACHE_DIR:-/artifacts/torchinductor-cache}"
+    ) in compose
+    assert ("DOC_FORGE_TRANSFORMERS_OFFLINE: ${DOC_FORGE_TRANSFORMERS_OFFLINE:-0}") in compose
+    assert "\n      HF_HOME:" not in compose
+    assert "\n      HF_HUB_OFFLINE:" not in compose
+    assert "\n      TRANSFORMERS_OFFLINE:" not in compose
+    assert "\n      TORCHINDUCTOR_CACHE_DIR:" not in compose

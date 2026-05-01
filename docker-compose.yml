@@ -11,13 +11,13 @@ services:
       DOC_FORGE_EMBEDDING_MODEL: ${DOC_FORGE_EMBEDDING_MODEL:-deterministic}
       DOC_FORGE_SERVICE_NAME: doc_forge-api
       DOC_FORGE_JSON_LOG_PATH: /logs/compose/runs/${DOC_FORGE_LOG_RUN_ID:-manual}/api.jsonl
-      HF_HOME: ${HF_HOME:-/artifacts/huggingface}
-      HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}
+      DOC_FORGE_HF_HOME: ${DOC_FORGE_HF_HOME:-/artifacts/huggingface}
+      DOC_FORGE_HF_HUB_OFFLINE: ${DOC_FORGE_HF_HUB_OFFLINE:-0}
+      DOC_FORGE_TORCHINDUCTOR_CACHE_DIR: ${DOC_FORGE_TORCHINDUCTOR_CACHE_DIR:-/artifacts/torchinductor-cache}
+      DOC_FORGE_TRANSFORMERS_OFFLINE: ${DOC_FORGE_TRANSFORMERS_OFFLINE:-0}
       HOME: /tmp
       PORT: "8000"
       TORCH_COMPILE_DISABLE: "1"
-      TORCHINDUCTOR_CACHE_DIR: /tmp/torch_cache
-      TRANSFORMERS_OFFLINE: ${TRANSFORMERS_OFFLINE:-0}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
