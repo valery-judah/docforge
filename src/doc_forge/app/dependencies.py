@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from doc_forge.app.settings import EmbeddingModelRegime, get_settings
+from doc_forge.app.runtime_checks import validate_runtime
+from doc_forge.app.settings import EmbeddingModelRegime, Settings, get_settings
 from doc_forge.embedding.contracts import EmbeddingModel
 from doc_forge.embedding.deterministic import DeterministicEmbeddingModel
 from doc_forge.embedding.sentence_transformer import SentenceTransformerEmbeddingModel
@@ -9,26 +10,40 @@ from doc_forge.persistence.in_memory_embeddings import InMemoryEmbeddingStore
 from doc_forge.persistence.in_memory_ingestion import InMemoryDocumentIngestionRepository
 from doc_forge.services import DocumentService
 
-_document_repository = InMemoryDocumentStore()
-_embedding_repository = InMemoryEmbeddingStore()
-_document_ingestion_repository = InMemoryDocumentIngestionRepository(
-    documents=_document_repository,
-    embeddings=_embedding_repository,
-)
-_settings = get_settings()
-_embedding_model: EmbeddingModel
-if _settings.embedding_model is EmbeddingModelRegime.DETERMINISTIC:
-    _embedding_model = DeterministicEmbeddingModel()
-elif _settings.embedding_model is EmbeddingModelRegime.TRANSFORMER:
-    _embedding_model = SentenceTransformerEmbeddingModel()
-else:
+
+def _create_settings() -> Settings:
+    settings = get_settings()
+    validate_runtime(settings)
+    return settings
+
+
+def _create_embedding_model(settings: Settings) -> EmbeddingModel:
+    if settings.embedding_model is EmbeddingModelRegime.DETERMINISTIC:
+        return DeterministicEmbeddingModel()
+    if settings.embedding_model is EmbeddingModelRegime.TRANSFORMER:
+        return SentenceTransformerEmbeddingModel()
     raise RuntimeError("DOC_FORGE_EMBEDDING_MODEL must be one of: deterministic, transformer")
 
-_document_service = DocumentService(
-    document_repository=_document_repository,
-    document_ingestion_repository=_document_ingestion_repository,
-    embedding_model=_embedding_model,
-)
+
+def _create_document_service() -> DocumentService:
+    settings = _create_settings()
+    embedding_model = _create_embedding_model(settings)
+
+    document_repository = InMemoryDocumentStore()
+    embedding_repository = InMemoryEmbeddingStore()
+    document_ingestion_repository = InMemoryDocumentIngestionRepository(
+        documents=document_repository,
+        embeddings=embedding_repository,
+    )
+
+    return DocumentService(
+        document_repository=document_repository,
+        document_ingestion_repository=document_ingestion_repository,
+        embedding_model=embedding_model,
+    )
+
+
+_document_service = _create_document_service()
 
 
 def get_document_service() -> DocumentService:
