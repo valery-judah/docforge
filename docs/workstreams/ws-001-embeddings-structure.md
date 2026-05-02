@@ -46,7 +46,7 @@ Application startup is the composition root. It reads `DOC_FORGE_EMBEDDING_MODEL
 singleton embedding model into `DocumentService`:
 
 - `deterministic` selects `DeterministicEmbeddingModel`.
-- `transformer` selects `SentenceTransformerEmbeddingModel`.
+- `transformer` selects `SentenceTransformerEmbeddingModel` and is the default.
 
 Runtime preflight checks stay in the application layer. For transformer mode, startup validates the
 Docker-provided Hugging Face and Torch cache directories before constructing the model-backed adapter.

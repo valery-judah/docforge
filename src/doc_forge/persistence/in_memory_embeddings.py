@@ -15,6 +15,18 @@ class InMemoryEmbeddingStore:
     def list_for_corpus(self, corpus_id: str) -> list[PassageEmbeddingRecord]:
         return list(self._records_by_corpus.get(corpus_id, {}).values())
 
+    def list_for_document(
+        self,
+        *,
+        corpus_id: str,
+        document_id: str,
+    ) -> list[PassageEmbeddingRecord]:
+        return [
+            record
+            for record in self._records_by_corpus.get(corpus_id, {}).values()
+            if record.document_id == document_id
+        ]
+
     def snapshot(self) -> dict[str, dict[str, PassageEmbeddingRecord]]:
         return {corpus_id: dict(records) for corpus_id, records in self._records_by_corpus.items()}
 

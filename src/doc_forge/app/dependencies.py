@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import cast
+
+from fastapi import Request
+
 from doc_forge.app.runtime_checks import validate_runtime
 from doc_forge.app.settings import EmbeddingModelRegime, Settings, get_settings
 from doc_forge.embedding.contracts import EmbeddingModel
@@ -11,10 +16,20 @@ from doc_forge.persistence.in_memory_ingestion import InMemoryDocumentIngestionR
 from doc_forge.services import DocumentService
 
 
-def _create_settings() -> Settings:
-    settings = get_settings()
+@dataclass(frozen=True)
+class AppContainer:
+    settings: Settings
+    document_service: DocumentService
+
+
+def create_app_container(settings: Settings | None = None) -> AppContainer:
+    if settings is None:
+        settings = get_settings()
     validate_runtime(settings)
-    return settings
+    return AppContainer(
+        settings=settings,
+        document_service=_create_document_service(settings),
+    )
 
 
 def _create_embedding_model(settings: Settings) -> EmbeddingModel:
@@ -25,8 +40,7 @@ def _create_embedding_model(settings: Settings) -> EmbeddingModel:
     raise RuntimeError("DOC_FORGE_EMBEDDING_MODEL must be one of: deterministic, transformer")
 
 
-def _create_document_service() -> DocumentService:
-    settings = _create_settings()
+def _create_document_service(settings: Settings) -> DocumentService:
     embedding_model = _create_embedding_model(settings)
 
     document_repository = InMemoryDocumentStore()
@@ -39,12 +53,13 @@ def _create_document_service() -> DocumentService:
     return DocumentService(
         document_repository=document_repository,
         document_ingestion_repository=document_ingestion_repository,
+        embedding_repository=embedding_repository,
         embedding_model=embedding_model,
     )
 
 
-_document_service = _create_document_service()
-
-
-def get_document_service() -> DocumentService:
-    return _document_service
+def get_document_service(request: Request) -> DocumentService:
+    container = cast(AppContainer | None, getattr(request.app.state, "container", None))
+    if container is None:
+        raise RuntimeError("Application container is not initialized.")
+    return container.document_service

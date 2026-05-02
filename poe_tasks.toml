@@ -43,4 +43,4 @@ cmd = "python -m doc_forge.devtools.secret_scan --scope staged-added"
 
 [tasks.run-api]
 help = "Run the DocForge FastAPI app"
-cmd = "uvicorn doc_forge.app.api:app --reload"
+cmd = "uvicorn doc_forge.app.api:create_app --factory --reload --host 0.0.0.0 --port ${PORT:-8000}"

@@ -4,10 +4,25 @@ DocForge Python service scaffold.
 
 ## Command Model
 
-Use `uv` for environment management and Poe for Python developer tasks:
+Use Docker Compose for the default application runtime:
 
 ```bash
-uv sync
+make docker-up-build
+curl "$(make docker-url)/readyz"
+make docker-down
+```
+
+Use the playground script to start the app and load a couple of Markdown
+documents for UI exploration:
+
+```bash
+./scripts/dev.sh up-demo
+```
+
+Use `uv` for host environment management and Poe for Python developer tasks:
+
+```bash
+uv sync --group llm
 uv run poe fmt
 uv run poe lint
 uv run poe type
@@ -42,6 +57,10 @@ curl "$(make docker-url)/readyz"
 make docker-down
 ```
 
+The Docker image uses `uv` only while building the locked virtual environment.
+The final runtime container does not include or invoke `uv`; use `python` for
+any in-container diagnostics.
+
 Use `PORT` to change the host port while the container continues to listen on
 port `8000`:
 
@@ -51,7 +70,9 @@ curl http://127.0.0.1:8080/readyz
 ```
 
 Runtime artifacts are mounted at `./data` on the host and `/artifacts` in the
-container. Compose JSON logs are archived under `./data/logs/compose`.
+container. Compose JSON logs are archived under `./data/logs/compose`. Make
+passes the host UID/GID into Compose so files created in these bind mounts stay
+editable by the local user.
 
 Local clients should avoid assuming that `localhost` means the Docker host.
 Use the discovery helper when a command may run from either the host shell or a
@@ -67,11 +88,43 @@ it probes `127.0.0.1`, `host.docker.internal`, and `172.17.0.1` using the
 configured `PORT`. Compose also exposes the API as `api:8000` and
 `docforge-api:8000` for container-to-container calls.
 
-For sentence-transformer-backed Docker runs, build the image with the optional
-LLM dependency group:
+Compose builds the default image with the LLM dependency group because
+sentence-transformer-backed embeddings are the default runtime mode. To force the
+deterministic development model:
 
 ```bash
-DOC_FORGE_UV_SYNC_GROUPS="--group llm" \
-DOC_FORGE_EMBEDDING_MODEL=transformer \
+DOC_FORGE_UV_SYNC_GROUPS="" \
+DOC_FORGE_EMBEDDING_MODEL=deterministic \
 make docker-up-build
 ```
+
+## UI Playground
+
+Start the Docker app and seed demo Markdown documents:
+
+```bash
+./scripts/dev.sh up-demo
+```
+
+The script uploads `evals/corpus/research-notes-1.md` and
+`evals/corpus/config-reference-1.md` into the `default` corpus, then verifies
+each upload through the document inspection endpoint. Open the printed `/ui`
+URL to inspect the processed document structure and embedding metadata.
+
+Seed an already-running app:
+
+```bash
+./scripts/dev.sh seed-demo
+```
+
+Reset the Docker runtime and reseed demo documents:
+
+```bash
+./scripts/dev.sh reset-demo
+```
+
+The current runtime stores documents in memory, so demo data is attached to the
+running API process. Reseed after restarting the app. Override
+`DOC_FORGE_DEMO_CORPUS_ID`, `DOC_FORGE_DEMO_DOCS`, or
+`DOC_FORGE_API_BASE_URL` when you need a different corpus, document set, or API
+target.

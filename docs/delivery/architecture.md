@@ -17,10 +17,13 @@ do not create a partial document record.
 The default app runtime uses in-memory repositories. Parsed document structure is
 an intermediate representation in this slice, not persisted state.
 
-Application composition lives in the FastAPI app boundary. `Settings` reads
-`DOC_FORGE_EMBEDDING_MODEL`, which accepts `deterministic` or `transformer`, and
-the dependency wiring constructs one embedding model singleton for
-`DocumentService`. The deterministic model is the default runtime. Transformer
-mode uses the default sentence-transformers adapter and requires the optional LLM
-dependency group plus Docker-provided Hugging Face and Torch cache directories,
-which application startup preflight validates before model construction.
+Application composition lives in the FastAPI app boundary. The runtime entrypoint
+uses the `create_app` factory, and FastAPI lifespan startup creates one
+application container holding validated `Settings` plus the singleton
+`DocumentService`. `DOC_FORGE_EMBEDDING_MODEL` accepts `deterministic` or
+`transformer`; transformer is the default runtime. Transformer mode uses the
+default sentence-transformers adapter. Compose builds the default image with the
+LLM dependency group so the default runtime has that backend installed. Hugging
+Face and Torch cache directories default under
+`DOC_FORGE_ARTIFACT_ROOT`; startup preflight validates those paths before model
+construction.
