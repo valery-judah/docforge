@@ -1,6 +1,10 @@
 # Current Architecture
 
-DocForge is currently an API-first Markdown ingestion service.
+DocForge is currently an API-first Markdown ingestion service. This is the
+implemented ingestion and evidence-preparation segment of the `mvp-0`
+Markdown-only walking skeleton described in `docs/evergreen/mvp.md`; query,
+answer, abstention, and citation behavior remain product-scope targets unless
+called out here as implemented repo truth.
 
 Markdown uploads enter through `POST /corpora/{corpus_id}/documents`. The API
 validates Markdown support and delegates to `DocumentService`.

@@ -1,6 +1,14 @@
 # docforge
 
-DocForge Python service scaffold.
+DocForge is a document question-answering service under construction. This
+repository is organized around `mvp-0`: the Markdown-only walking skeleton of
+DocForge, a narrow end-to-end slice that connects the main product flow before
+adding PDFs, richer provenance, and broader answer behavior.
+
+The walking skeleton is intentionally small, but it should remain executable,
+deployable, and testable end to end. It is the foundation for future product
+work and should later become the baseline path used by the evaluation
+implementation.
 
 ## Command Model
 

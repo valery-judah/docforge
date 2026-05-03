@@ -1,6 +1,11 @@
+# Evaluation Notes
 
-for now:
-## 9. Minimal Smoke Evaluation
+`mvp-0` should become the baseline implementation path for evaluation work. The
+first evaluation pack should stay deliberately small and exercise the
+Markdown-only walking skeleton end to end before adding PDF, mixed-format, or
+richer support-state cases.
+
+## Minimal Smoke Evaluation
 
 The first smoke eval should be deliberately small: 4 to 6 questions over 2 to 3 Markdown files.
 

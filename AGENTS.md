@@ -6,6 +6,14 @@
 
 `docs/evergreen/mvp.md` is the canonical product source. `docs/delivery/architecture.md` is the current architecture source until it is promoted or superseded. `docs/archive/` is history-only.
 
+## Repo Description
+DocForge is a document question-answering service under construction. This repo
+is organized around `mvp-0`, the Markdown-only walking skeleton: a thin vertical
+slice through the future QA service flow before PDFs, richer provenance, and
+broader answer behavior are added. Treat this as an end-to-end product spine,
+not a horizontal base layer; later evaluation work should reuse this skeleton as
+the baseline implementation path.
+
 ## Commands
 - Use `uv` as the Python command entrypoint for this repo.
 - Prefer `uv run poe <task>` for defined developer workflows; otherwise use `uv run <tool>`.
