@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import pytest
 
 from doc_forge.embedding import EmbeddingModel
@@ -22,7 +24,7 @@ class _FakeSentenceTransformerModel:
 
     def encode(
         self,
-        sentences,
+        sentences: Sequence[str],
         *,
         normalize_embeddings: bool = True,
         convert_to_numpy: bool = True,
@@ -32,7 +34,8 @@ class _FakeSentenceTransformerModel:
         assert convert_to_numpy is True
         assert show_progress_bar is False
         self.calls.append(list(sentences))
-        return _ArrayLike([[0.5, -0.25], [1, "2.5"]])
+        rows: list[list[float | int | str]] = [[0.5, -0.25], [1, "2.5"]]
+        return _ArrayLike(rows[: len(sentences)])
 
 
 def test_sentence_transformer_embedding_model_uses_loader_and_coerces_vectors() -> None:
@@ -60,6 +63,16 @@ def test_sentence_transformer_embedding_model_uses_loader_and_coerces_vectors() 
     )
 
 
+def test_sentence_transformer_embedding_model_embeds_one_text() -> None:
+    fake_model = _FakeSentenceTransformerModel()
+    model = SentenceTransformerEmbeddingModel(loader=lambda _model_name: fake_model)
+
+    vector = model.embed_text("alpha")
+
+    assert fake_model.calls == [["alpha"]]
+    assert vector == EmbeddingVector([0.5, -0.25])
+
+
 def test_embedding_vector_coerces_values_and_exposes_dimensions() -> None:
     vector = EmbeddingVector([0.5, 1, "2.5"])
 
@@ -78,6 +91,21 @@ def test_embedding_batch_allows_empty_batches() -> None:
 
     assert len(batch) == 0
     assert list(batch) == []
+
+
+def test_embedding_batch_returns_single_vector() -> None:
+    vector = EmbeddingVector([0.5, 1.0])
+    batch = EmbeddingBatch([vector])
+
+    assert batch.single() == vector
+
+
+def test_embedding_batch_rejects_non_single_batches() -> None:
+    with pytest.raises(ValueError, match="exactly one vector"):
+        EmbeddingBatch([]).single()
+
+    with pytest.raises(ValueError, match="exactly one vector"):
+        EmbeddingBatch([EmbeddingVector([1.0]), EmbeddingVector([2.0])]).single()
 
 
 def test_embedding_batch_rejects_mixed_dimensions() -> None:

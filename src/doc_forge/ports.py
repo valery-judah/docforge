@@ -7,12 +7,14 @@ from doc_forge.embedding.records import PassageEmbeddingRecord
 
 
 class DocumentRepository(Protocol):
-    def list_for_corpus(self, corpus_id: str) -> list[DocumentRecord]: ...
+    def list_by_corpus(self, corpus_id: str) -> list[DocumentRecord]: ...
 
     def get(self, *, corpus_id: str, document_id: str) -> DocumentRecord: ...
 
 
 class EmbeddingRepository(Protocol):
+    def list_by_corpus(self, corpus_id: str) -> list[PassageEmbeddingRecord]: ...
+
     def list_for_document(
         self,
         *,

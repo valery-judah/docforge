@@ -22,6 +22,9 @@ class DeterministicEmbeddingModel(EmbeddingModel):
     def embed_texts(self, texts: list[str]) -> EmbeddingBatch:
         return EmbeddingBatch(EmbeddingVector(self._embed_text(text)) for text in texts)
 
+    def embed_text(self, text: str) -> EmbeddingVector:
+        return EmbeddingVector(self._embed_text(text))
+
     def _embed_text(self, text: str) -> list[float]:
         vector = [0.0] * self._dimensions
         for token in text.lower().split():

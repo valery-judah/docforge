@@ -11,7 +11,7 @@ class InMemoryDocumentStore:
         corpus_documents = self._documents_by_corpus.setdefault(document.corpus_id, {})
         corpus_documents[document.document_id] = document
 
-    def list_for_corpus(self, corpus_id: str) -> list[DocumentRecord]:
+    def list_by_corpus(self, corpus_id: str) -> list[DocumentRecord]:
         return list(self._documents_by_corpus.get(corpus_id, {}).values())
 
     def get(self, *, corpus_id: str, document_id: str) -> DocumentRecord:

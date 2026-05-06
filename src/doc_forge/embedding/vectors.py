@@ -53,6 +53,11 @@ class EmbeddingBatch:
     def __iter__(self) -> Iterator[EmbeddingVector]:
         return iter(self.vectors)
 
+    def single(self) -> EmbeddingVector:
+        if len(self.vectors) != 1:
+            raise ValueError("embedding batch must contain exactly one vector")
+        return self.vectors[0]
+
     @overload
     def __getitem__(self, index: int) -> EmbeddingVector: ...
 

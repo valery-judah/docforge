@@ -8,9 +8,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
-from doc_forge.app.dependencies import create_app_container, get_document_service
+from doc_forge.app.dependencies import (
+    create_app_container,
+    get_document_service,
+    get_retrieval_service,
+)
 from doc_forge.app.settings import Settings
 from doc_forge.documents import (
     DocumentNotFound,
@@ -19,6 +23,7 @@ from doc_forge.documents import (
     UnsupportedDocumentType,
 )
 from doc_forge.processing.document_structure import DocumentPassageKind
+from doc_forge.retrieval import RetrievalQuery, RetrievalResult, RetrievalService
 from doc_forge.services import (
     DocumentInspection,
     DocumentService,
@@ -93,6 +98,37 @@ class DocumentInspectionResponse(BaseModel):
     document_type: DocumentType
     body: str
     sections: tuple[DocumentSectionInspectionResponse, ...]
+
+
+class RetrievalQueryRequest(BaseModel):
+    question: str = Field(min_length=1)
+    top_k: int = Field(default=5, ge=1, le=20)
+
+    @field_validator("question")
+    @classmethod
+    def question_must_not_be_blank(cls, value: str) -> str:
+        stripped_value = value.strip()
+        if not stripped_value:
+            raise ValueError("question must not be blank")
+        return stripped_value
+
+
+class RetrievedPassageResponse(BaseModel):
+    rank: int
+    score: float
+    document_id: str
+    section_id: str
+    passage_id: str
+    heading_path: tuple[str, ...]
+    start_line: int
+    end_line: int
+    text: str
+
+
+class RetrievalQueryResponse(BaseModel):
+    corpus_id: str
+    question: str
+    candidates: tuple[RetrievedPassageResponse, ...]
 
 
 @router.get("/", include_in_schema=False)
@@ -186,3 +222,21 @@ def get_document(
         ) from exc
 
     return document
+
+
+@router.post(
+    "/corpora/{corpus_id}/retrieval/query",
+    response_model=RetrievalQueryResponse,
+)
+def retrieve_passages(
+    corpus_id: str,
+    request: RetrievalQueryRequest,
+    retrieval_service: Annotated[RetrievalService, Depends(get_retrieval_service)],
+) -> RetrievalResult:
+    return retrieval_service.retrieve(
+        RetrievalQuery(
+            corpus_id=corpus_id,
+            question=request.question,
+            top_k=request.top_k,
+        )
+    )

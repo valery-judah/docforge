@@ -108,7 +108,7 @@ class DocumentService:
     def list_documents(self, *, corpus_id: str) -> list[DocumentSummary]:
         return [
             _to_document_summary(document)
-            for document in self._document_repository.list_for_corpus(corpus_id)
+            for document in self._document_repository.list_by_corpus(corpus_id)
         ]
 
     def get_document(self, *, corpus_id: str, document_id: str) -> DocumentSummary:

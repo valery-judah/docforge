@@ -30,6 +30,9 @@ class SentenceTransformerEmbeddingModel(EmbeddingModel):
         )
         return _coerce_vector_rows(encoded)
 
+    def embed_text(self, text: str) -> EmbeddingVector:
+        return self.embed_texts([text]).single()
+
 
 def _coerce_vector_rows(encoded: object) -> EmbeddingBatch:
     return EmbeddingBatch(

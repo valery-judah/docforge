@@ -18,11 +18,19 @@ from doc_forge.services import (
 )
 
 
+def _empty_documents() -> list[DocumentRecord]:
+    return []
+
+
+def _empty_passage_embeddings() -> list[PassageEmbeddingRecord]:
+    return []
+
+
 @dataclass
 class RecordingDocumentRepository:
-    saved_documents: list[DocumentRecord] = field(default_factory=list)
+    saved_documents: list[DocumentRecord] = field(default_factory=_empty_documents)
 
-    def list_for_corpus(self, corpus_id: str) -> list[DocumentRecord]:
+    def list_by_corpus(self, corpus_id: str) -> list[DocumentRecord]:
         return [document for document in self.saved_documents if document.corpus_id == corpus_id]
 
     def get(self, *, corpus_id: str, document_id: str) -> DocumentRecord:
@@ -49,7 +57,12 @@ class RecordingDocumentIngestionRepository:
 
 @dataclass
 class RecordingEmbeddingRepository:
-    saved_embeddings: list[PassageEmbeddingRecord] = field(default_factory=list)
+    saved_embeddings: list[PassageEmbeddingRecord] = field(
+        default_factory=_empty_passage_embeddings
+    )
+
+    def list_by_corpus(self, corpus_id: str) -> list[PassageEmbeddingRecord]:
+        return [record for record in self.saved_embeddings if record.corpus_id == corpus_id]
 
     def list_for_document(
         self,
@@ -65,6 +78,9 @@ class RecordingEmbeddingRepository:
 
 
 class RecordingEmbeddingModel:
+    def embed_text(self, text: str) -> EmbeddingVector:
+        return EmbeddingVector([0.0, float(len(text))])
+
     def embed_texts(self, texts: list[str]) -> EmbeddingBatch:
         return EmbeddingBatch(
             EmbeddingVector([float(index), float(len(text))]) for index, text in enumerate(texts)
@@ -72,6 +88,10 @@ class RecordingEmbeddingModel:
 
 
 class FailingEmbeddingModel:
+    def embed_text(self, text: str) -> EmbeddingVector:
+        _ = text
+        raise RuntimeError("embedding failed")
+
     def embed_texts(self, texts: list[str]) -> EmbeddingBatch:
         _ = texts
         raise RuntimeError("embedding failed")

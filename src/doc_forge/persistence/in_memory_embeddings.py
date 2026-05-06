@@ -12,7 +12,7 @@ class InMemoryEmbeddingStore:
             corpus_records = self._records_by_corpus.setdefault(record.corpus_id, {})
             corpus_records[record.embedding_id] = record
 
-    def list_for_corpus(self, corpus_id: str) -> list[PassageEmbeddingRecord]:
+    def list_by_corpus(self, corpus_id: str) -> list[PassageEmbeddingRecord]:
         return list(self._records_by_corpus.get(corpus_id, {}).values())
 
     def list_for_document(
