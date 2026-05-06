@@ -161,6 +161,7 @@ function renderInspection() {
 function renderSection(section) {
   const title = section.heading_title || "Document root";
   const path = section.section_path.length > 0 ? section.section_path.join(" / ") : "root";
+  const embeddingSummary = sectionEmbeddingSummary(section.passages);
   const passages =
     section.passages.length > 0
       ? section.passages.map(renderPassage).join("")
@@ -171,10 +172,39 @@ function renderSection(section) {
       <header class="section-title">
         <h3>${escapeHtml(title)}</h3>
         <div class="path">${escapeHtml(path)} / lines ${section.start_line}-${section.end_line}</div>
+        <div class="embedding-summary">${escapeHtml(embeddingSummary)}</div>
       </header>
       ${passages}
     </article>
   `;
+}
+
+function sectionEmbeddingSummary(passages) {
+  if (passages.length === 0) {
+    return "No passage embeddings in this section";
+  }
+
+  const embeddedPassages = passages.filter((passage) => passage.embedding);
+  if (embeddedPassages.length === 0) {
+    return `${countLabel(passages.length, "passage")} / no embeddings`;
+  }
+
+  const dimensions = [
+    ...new Set(
+      embeddedPassages.map((passage) => passage.embedding.vector_dimensions),
+    ),
+  ].sort((left, right) => left - right);
+  const dimensionText =
+    dimensions.length === 1 ? `dim ${dimensions[0]}` : `dims ${dimensions.join(", ")}`;
+
+  return `${countLabel(passages.length, "passage")} / ${countLabel(
+    embeddedPassages.length,
+    "vector",
+  )} / ${dimensionText}`;
+}
+
+function countLabel(count, label) {
+  return `${count} ${count === 1 ? label : `${label}s`}`;
 }
 
 function renderPassage(passage) {

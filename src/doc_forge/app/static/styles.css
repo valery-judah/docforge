@@ -269,7 +269,9 @@ h3 {
 }
 
 .view.active {
-  display: block;
+  display: grid;
+  align-content: start;
+  gap: 12px;
 }
 
 .section {
@@ -291,6 +293,11 @@ h3 {
   color: var(--muted);
   font-size: 12px;
   overflow-wrap: anywhere;
+}
+
+.embedding-summary {
+  color: var(--accent-strong);
+  font-size: 12px;
 }
 
 .passage {
