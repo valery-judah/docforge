@@ -4,6 +4,7 @@ from hashlib import sha256
 from math import sqrt
 
 from doc_forge.embedding.contracts import EmbeddingModel
+from doc_forge.embedding.vectors import EmbeddingBatch, EmbeddingVector
 
 
 class DeterministicEmbeddingModel(EmbeddingModel):
@@ -18,8 +19,8 @@ class DeterministicEmbeddingModel(EmbeddingModel):
         self._dimensions = dimensions
         self.model_name = model_name
 
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
-        return [self._embed_text(text) for text in texts]
+    def embed_texts(self, texts: list[str]) -> EmbeddingBatch:
+        return EmbeddingBatch(EmbeddingVector(self._embed_text(text)) for text in texts)
 
     def _embed_text(self, text: str) -> list[float]:
         vector = [0.0] * self._dimensions

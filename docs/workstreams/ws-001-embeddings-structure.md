@@ -17,15 +17,15 @@ DocumentService -> EmbeddingModel port -> embedding adapter -> model backend
 `EmbeddingModel` is the application-facing contract for calculating embeddings:
 
 ```python
-def embed_texts(texts: list[str]) -> list[list[float]]:
+def embed_texts(texts: list[str]) -> EmbeddingBatch:
     ...
 ```
 
 The service layer only needs this behavior. It does not know whether vectors come from a deterministic
 hash implementation, sentence-transformers, or a future backend.
 
-The contract currently returns plain Python lists. That keeps persistence and service code simple and
-does not introduce a NumPy-native vector contract yet.
+The contract returns embedding domain value objects. That keeps NumPy and backend-native arrays behind
+adapter boundaries while giving application and persistence code explicit vector semantics.
 
 ## Adapters
 

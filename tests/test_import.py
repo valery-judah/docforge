@@ -12,6 +12,7 @@ from doc_forge.app.api import create_app, readyz
 from doc_forge.app.dependencies import get_document_service
 from doc_forge.app.settings import Settings
 from doc_forge.embedding.deterministic import DeterministicEmbeddingModel
+from doc_forge.embedding.vectors import EmbeddingBatch, EmbeddingVector
 from doc_forge.persistence.in_memory_documents import InMemoryDocumentStore
 from doc_forge.persistence.in_memory_embeddings import InMemoryEmbeddingStore
 from doc_forge.persistence.in_memory_ingestion import InMemoryDocumentIngestionRepository
@@ -107,8 +108,8 @@ def test_default_embedding_model_uses_transformer_mode(
             nonlocal created_transformer_models
             created_transformer_models += 1
 
-        def embed_texts(self, texts: list[str]) -> list[list[float]]:
-            return [[] for _text in texts]
+        def embed_texts(self, texts: list[str]) -> EmbeddingBatch:
+            return EmbeddingBatch(EmbeddingVector([0.0]) for _text in texts)
 
     monkeypatch.setattr(
         dependencies,

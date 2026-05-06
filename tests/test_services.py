@@ -10,6 +10,7 @@ from doc_forge.documents import (
     DocumentType,
 )
 from doc_forge.embedding.records import PassageEmbeddingRecord
+from doc_forge.embedding.vectors import EmbeddingBatch, EmbeddingVector
 from doc_forge.services import (
     DocumentService,
     DocumentSummary,
@@ -64,12 +65,14 @@ class RecordingEmbeddingRepository:
 
 
 class RecordingEmbeddingModel:
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
-        return [[float(index), float(len(text))] for index, text in enumerate(texts)]
+    def embed_texts(self, texts: list[str]) -> EmbeddingBatch:
+        return EmbeddingBatch(
+            EmbeddingVector([float(index), float(len(text))]) for index, text in enumerate(texts)
+        )
 
 
 class FailingEmbeddingModel:
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+    def embed_texts(self, texts: list[str]) -> EmbeddingBatch:
         _ = texts
         raise RuntimeError("embedding failed")
 
@@ -111,7 +114,7 @@ def test_document_service_synchronously_ingests_markdown_document() -> None:
     assert not hasattr(document, "status")
     assert not hasattr(saved_document, "status")
     assert [record.text for record in ingestion.saved_embeddings] == ["Body."]
-    assert ingestion.saved_embeddings[0].vector == (0.0, 5.0)
+    assert ingestion.saved_embeddings[0].vector == EmbeddingVector([0.0, 5.0])
 
 
 def test_document_service_preserves_heading_context_and_passage_order() -> None:

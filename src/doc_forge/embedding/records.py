@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from doc_forge.embedding.vectors import EmbeddingVector
+
 
 @dataclass(frozen=True)
 class PassageEmbeddingRecord:
@@ -15,4 +17,4 @@ class PassageEmbeddingRecord:
     heading_path: tuple[str, ...]
     start_line: int
     end_line: int
-    vector: tuple[float, ...]
+    vector: EmbeddingVector

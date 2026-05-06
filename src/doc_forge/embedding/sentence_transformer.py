@@ -8,6 +8,7 @@ from doc_forge.embedding.sentence_transformer_loader import (
     SentenceTransformerBackend,
     load_sentence_transformer_model,
 )
+from doc_forge.embedding.vectors import EmbeddingBatch, EmbeddingVector
 
 
 class SentenceTransformerEmbeddingModel(EmbeddingModel):
@@ -20,7 +21,7 @@ class SentenceTransformerEmbeddingModel(EmbeddingModel):
         self.model_name = model_name
         self._model = (loader or load_sentence_transformer_model)(model_name)
 
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+    def embed_texts(self, texts: list[str]) -> EmbeddingBatch:
         encoded = self._model.encode(
             texts,
             normalize_embeddings=True,
@@ -30,8 +31,10 @@ class SentenceTransformerEmbeddingModel(EmbeddingModel):
         return _coerce_vector_rows(encoded)
 
 
-def _coerce_vector_rows(encoded: object) -> list[list[float]]:
-    return [[_coerce_float(value) for value in row] for row in _to_python_rows(encoded)]
+def _coerce_vector_rows(encoded: object) -> EmbeddingBatch:
+    return EmbeddingBatch(
+        EmbeddingVector(_coerce_float(value) for value in row) for row in _to_python_rows(encoded)
+    )
 
 
 def _to_python_rows(value: object) -> list[list[object]]:

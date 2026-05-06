@@ -180,7 +180,7 @@ def _to_embedding_summary(record: PassageEmbeddingRecord | None) -> PassageEmbed
     return PassageEmbeddingSummary(
         embedding_id=record.embedding_id,
         ordinal=record.ordinal,
-        vector_dimensions=len(record.vector),
+        vector_dimensions=record.vector.dimensions,
     )
 
 
@@ -211,7 +211,7 @@ def _embedding_records_for(
                     heading_path=section.section_path,
                     start_line=passage.start_line,
                     end_line=passage.end_line,
-                    vector=tuple(vector),
+                    vector=vector,
                 )
             )
 
