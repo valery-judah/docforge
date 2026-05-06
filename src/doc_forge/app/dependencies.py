@@ -5,6 +5,7 @@ from typing import cast
 
 from fastapi import Request
 
+from doc_forge.answering import AnswerService
 from doc_forge.app.runtime_checks import validate_runtime
 from doc_forge.app.settings import EmbeddingModelRegime, Settings, get_settings
 from doc_forge.embedding.contracts import EmbeddingModel
@@ -22,15 +23,19 @@ class AppContainer:
     settings: Settings
     document_service: DocumentService
     retrieval_service: RetrievalService
+    answer_service: AnswerService
 
 
 def create_app_container(settings: Settings | None = None) -> AppContainer:
     if settings is None:
         settings = get_settings()
     validate_runtime(settings)
-    document_service, retrieval_service = _create_services(settings)
+    document_service, retrieval_service, answer_service = _create_services(settings)
     return AppContainer(
-        settings=settings, document_service=document_service, retrieval_service=retrieval_service
+        settings=settings,
+        document_service=document_service,
+        retrieval_service=retrieval_service,
+        answer_service=answer_service,
     )
 
 
@@ -42,7 +47,7 @@ def _create_embedding_model(settings: Settings) -> EmbeddingModel:
     raise RuntimeError("DOC_FORGE_EMBEDDING_MODEL must be one of: deterministic, transformer")
 
 
-def _create_services(settings: Settings) -> tuple[DocumentService, RetrievalService]:
+def _create_services(settings: Settings) -> tuple[DocumentService, RetrievalService, AnswerService]:
     embedding_model = _create_embedding_model(settings)
 
     document_repository = InMemoryDocumentStore()
@@ -62,7 +67,8 @@ def _create_services(settings: Settings) -> tuple[DocumentService, RetrievalServ
         embedding_repository=embedding_repository,
         embedding_model=embedding_model,
     )
-    return document_service, retrieval_service
+    answer_service = AnswerService(retrieval_service)
+    return document_service, retrieval_service, answer_service
 
 
 def get_document_service(request: Request) -> DocumentService:
@@ -77,3 +83,10 @@ def get_retrieval_service(request: Request) -> RetrievalService:
     if container is None:
         raise RuntimeError("Application container is not initialized.")
     return container.retrieval_service
+
+
+def get_answer_service(request: Request) -> AnswerService:
+    container = cast(AppContainer | None, getattr(request.app.state, "container", None))
+    if container is None:
+        raise RuntimeError("Application container is not initialized.")
+    return container.answer_service
