@@ -8,10 +8,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from doc_forge.answering import AnswerQuery, AnswerResult, AnswerService
 from doc_forge.app.dependencies import (
     create_app_container,
+    get_answer_service,
     get_document_service,
     get_retrieval_service,
 )
@@ -113,6 +115,20 @@ class RetrievalQueryRequest(BaseModel):
         return stripped_value
 
 
+class AnswerQueryRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    question: str = Field(min_length=1)
+
+    @field_validator("question")
+    @classmethod
+    def question_must_not_be_blank(cls, value: str) -> str:
+        stripped_value = value.strip()
+        if not stripped_value:
+            raise ValueError("question must not be blank")
+        return stripped_value
+
+
 class RetrievedPassageResponse(BaseModel):
     rank: int
     score: float
@@ -129,6 +145,13 @@ class RetrievalQueryResponse(BaseModel):
     corpus_id: str
     question: str
     candidates: tuple[RetrievedPassageResponse, ...]
+
+
+class AnswerQueryResponse(BaseModel):
+    corpus_id: str
+    question: str
+    answer: str | None
+    source_passages: tuple[RetrievedPassageResponse, ...]
 
 
 @router.get("/", include_in_schema=False)
@@ -238,5 +261,22 @@ def retrieve_passages(
             corpus_id=corpus_id,
             question=request.question,
             top_k=request.top_k,
+        )
+    )
+
+
+@router.post(
+    "/corpora/{corpus_id}/answers/query",
+    response_model=AnswerQueryResponse,
+)
+def answer_question(
+    corpus_id: str,
+    request: AnswerQueryRequest,
+    answer_service: Annotated[AnswerService, Depends(get_answer_service)],
+) -> AnswerResult:
+    return answer_service.answer(
+        AnswerQuery(
+            corpus_id=corpus_id,
+            question=request.question,
         )
     )
