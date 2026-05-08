@@ -84,3 +84,5 @@ scripts/devex/*
 !scripts/devex/.gitkeep
 !scripts/devex/resolve_api_base_url.py
 pyright_output.json
+.tmp/
+.docker-config/

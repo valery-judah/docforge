@@ -1,4 +1,4 @@
-"""Shared local Docker answer-generator defaults for developer workflows."""
+"""Shared local Docker answer-synthesizer defaults for developer workflows."""
 
 from __future__ import annotations
 
@@ -11,19 +11,21 @@ import urllib.request
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-DEFAULT_OLLAMA_MODEL = "llama3.2:1b"
+DEFAULT_OLLAMA_MODEL = "qwen3.5:9b"
 DEFAULT_HOST_OLLAMA_BASE_URL = "http://host.docker.internal:11434"
 DEFAULT_CONTAINER_OLLAMA_BASE_URL = "http://ollama:11434"
 DEFAULT_HOST_OLLAMA_HEALTH_URL = "http://127.0.0.1:11434/api/tags"
+_NAMESPACED_OLLAMA_BASE_URL_ENV = "DOC_FORGE_OLLAMA_BASE_URL"
+_LEGACY_OLLAMA_BASE_URL_ENV = "OLLAMA_BASE_URL"
 _MANAGED_ENV_KEYS = (
-    "DOC_FORGE_ANSWER_GENERATOR_BACKEND",
-    "DOC_FORGE_ANSWER_GENERATOR_MODEL",
-    "OLLAMA_BASE_URL",
+    "DOC_FORGE_ANSWER_SYNTHESIZER_BACKEND",
+    "DOC_FORGE_ANSWER_SYNTHESIZER_MODEL",
+    _NAMESPACED_OLLAMA_BASE_URL_ENV,
 )
 
 
 @dataclass(frozen=True)
-class DockerLocalGeneratorSelection:
+class DockerLocalSynthesizerSelection:
     environment: dict[str, str]
     backend: str
     reason: str
@@ -43,30 +45,33 @@ def host_ollama_is_ready(
         return False
 
 
-def resolve_docker_local_generator(
+def resolve_docker_local_synthesizer(
     environ: Mapping[str, str] | None = None,
     *,
     system: str | None = None,
     machine: str | None = None,
     host_ollama_ready: bool | None = None,
-) -> DockerLocalGeneratorSelection:
+) -> DockerLocalSynthesizerSelection:
     env = dict(os.environ if environ is None else environ)
     resolved_system = platform.system() if system is None else system
     resolved_machine = platform.machine() if machine is None else machine
     apple_local = resolved_system == "Darwin" and resolved_machine == "arm64"
 
-    explicit_backend = env.get("DOC_FORGE_ANSWER_GENERATOR_BACKEND", "").strip()
-    explicit_model = env.get("DOC_FORGE_ANSWER_GENERATOR_MODEL", "").strip()
-    explicit_base_url = env.get("OLLAMA_BASE_URL", "").strip()
+    explicit_backend = env.get("DOC_FORGE_ANSWER_SYNTHESIZER_BACKEND", "").strip()
+    explicit_model = env.get("DOC_FORGE_ANSWER_SYNTHESIZER_MODEL", "").strip()
+    explicit_base_url = (
+        env.get(_NAMESPACED_OLLAMA_BASE_URL_ENV, "").strip()
+        or env.get(_LEGACY_OLLAMA_BASE_URL_ENV, "").strip()
+    )
 
     if explicit_backend:
         if explicit_backend.lower() != "ollama":
-            environment = {"DOC_FORGE_ANSWER_GENERATOR_BACKEND": explicit_backend}
+            environment = {"DOC_FORGE_ANSWER_SYNTHESIZER_BACKEND": explicit_backend}
             if explicit_model:
-                environment["DOC_FORGE_ANSWER_GENERATOR_MODEL"] = explicit_model
+                environment["DOC_FORGE_ANSWER_SYNTHESIZER_MODEL"] = explicit_model
             if explicit_base_url:
-                environment["OLLAMA_BASE_URL"] = explicit_base_url
-            return DockerLocalGeneratorSelection(
+                environment[_NAMESPACED_OLLAMA_BASE_URL_ENV] = explicit_base_url
+            return DockerLocalSynthesizerSelection(
                 environment=environment,
                 backend=explicit_backend,
                 reason="explicit_backend",
@@ -92,11 +97,11 @@ def resolve_docker_local_generator(
                 using_host_ollama = False
                 reason = "explicit_backend_container_ollama"
 
-        return DockerLocalGeneratorSelection(
+        return DockerLocalSynthesizerSelection(
             environment={
-                "DOC_FORGE_ANSWER_GENERATOR_BACKEND": explicit_backend,
-                "DOC_FORGE_ANSWER_GENERATOR_MODEL": explicit_model or DEFAULT_OLLAMA_MODEL,
-                "OLLAMA_BASE_URL": base_url,
+                "DOC_FORGE_ANSWER_SYNTHESIZER_BACKEND": explicit_backend,
+                "DOC_FORGE_ANSWER_SYNTHESIZER_MODEL": explicit_model or DEFAULT_OLLAMA_MODEL,
+                _NAMESPACED_OLLAMA_BASE_URL_ENV: base_url,
             },
             backend=explicit_backend,
             reason=reason,
@@ -109,11 +114,13 @@ def resolve_docker_local_generator(
         else bool(host_ollama_ready)
     )
     if apple_local and ready:
-        return DockerLocalGeneratorSelection(
+        return DockerLocalSynthesizerSelection(
             environment={
-                "DOC_FORGE_ANSWER_GENERATOR_BACKEND": "ollama",
-                "DOC_FORGE_ANSWER_GENERATOR_MODEL": explicit_model or DEFAULT_OLLAMA_MODEL,
-                "OLLAMA_BASE_URL": explicit_base_url or DEFAULT_HOST_OLLAMA_BASE_URL,
+                "DOC_FORGE_ANSWER_SYNTHESIZER_BACKEND": "ollama",
+                "DOC_FORGE_ANSWER_SYNTHESIZER_MODEL": explicit_model or DEFAULT_OLLAMA_MODEL,
+                _NAMESPACED_OLLAMA_BASE_URL_ENV: (
+                    explicit_base_url or DEFAULT_HOST_OLLAMA_BASE_URL
+                ),
             },
             backend="ollama",
             reason="apple_silicon_host_ollama",
@@ -125,9 +132,9 @@ def resolve_docker_local_generator(
         if not apple_local
         else "deterministic_host_ollama_unavailable"
     )
-    return DockerLocalGeneratorSelection(
+    return DockerLocalSynthesizerSelection(
         environment={
-            "DOC_FORGE_ANSWER_GENERATOR_BACKEND": "deterministic",
+            "DOC_FORGE_ANSWER_SYNTHESIZER_BACKEND": "deterministic",
         },
         backend="deterministic",
         reason=reason,
@@ -135,7 +142,7 @@ def resolve_docker_local_generator(
     )
 
 
-def format_shell_env(selection: DockerLocalGeneratorSelection) -> str:
+def format_shell_env(selection: DockerLocalSynthesizerSelection) -> str:
     lines: list[str] = []
     for key in _MANAGED_ENV_KEYS:
         value = selection.environment.get(key)
@@ -147,16 +154,16 @@ def format_shell_env(selection: DockerLocalGeneratorSelection) -> str:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m doc_forge.devtools.docker_local_generator")
+    parser = argparse.ArgumentParser(prog="python -m doc_forge.devtools.docker_local_synthesizer")
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser(
         "shell-env",
-        help="print shell exports for Docker-local answer-generation defaults",
+        help="print shell exports for Docker-local answer-synthesis defaults",
     )
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     if args.command == "shell-env":
-        print(format_shell_env(resolve_docker_local_generator()))
+        print(format_shell_env(resolve_docker_local_synthesizer()))
         return 0
     return 1
 
