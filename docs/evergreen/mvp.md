@@ -1,12 +1,19 @@
-# MVP-0: Markdown-Only Walking Skeleton
+# MVP-0: Markdown-Only Architectural Walking Skeleton
 
 ## 1. Purpose
 
-`mvp-0` is the walking skeleton of DocForge: the smallest executable
-end-to-end slice of the document question-answering MVP.
+`mvp-0` is the architectural walking skeleton of DocForge: the smallest
+executable end-to-end slice of the document question-answering MVP.
+
+It has two goals:
+
+1. Provide a minimal path that users and developers can walk end to end.
+2. Validate the foundational architecture, component boundaries, and
+   evidence-and-answering contracts of the QA system.
 
 It proves the product spine over Markdown files: bounded input, processing,
-retrieval, answer or abstention, and inspectable evidence references.
+retrieval, answer or abstention, inspectable evidence references, and the
+core architectural seams that future capabilities will build on.
 
 `mvp-0` is not the full MVP. It excludes PDFs, mixed-format corpora,
 partial-support handling, ambiguity handling, advanced retrieval, production
@@ -18,9 +25,10 @@ The broader MVP direction is a trust-first question-answering and
 evidence-inspection service over a bounded uploaded corpus of text-based PDFs
 and Markdown files.
 
-`mvp-0` is a narrower delivery slice under that product direction. It validates
-the product spine with Markdown only before adding PDF extraction, page
-provenance, mixed-format synthesis, and richer support-state behavior.
+`mvp-0` is a narrower delivery slice under that product direction. It
+establishes the first executable architecture with Markdown only before adding
+PDF extraction, page provenance, mixed-format synthesis, and richer
+support-state behavior.
 
 This document does not broaden MVP scope. If this document conflicts with
 historical material in `docs/archive/`, this evergreen document wins.
@@ -149,10 +157,10 @@ contract is promoted.
 
 ## 7. Evaluation Baseline
 
-The walking skeleton should remain small enough to evaluate repeatedly. Future
-evaluation implementation should reuse this path as the baseline end-to-end
-flow before adding PDF cases, richer provenance expectations, and broader answer
-behavior.
+This architectural walking skeleton should remain small enough to evaluate
+repeatedly. Future evaluation implementation should reuse this path as the
+baseline end-to-end flow before adding PDF cases, richer provenance
+expectations, and broader answer behavior.
 
 The first smoke evaluation should cover supported Markdown lookup, localized
 grounded explanation, unsupported-in-corpus abstention, source navigation, and

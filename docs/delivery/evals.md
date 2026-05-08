@@ -2,8 +2,8 @@
 
 `mvp-0` should become the baseline implementation path for evaluation work. The
 first evaluation pack should stay deliberately small and exercise the
-Markdown-only walking skeleton end to end before adding PDF, mixed-format, or
-richer support-state cases.
+Markdown-only architectural walking skeleton end to end before adding PDF,
+mixed-format, or richer support-state cases.
 
 ## Minimal Smoke Evaluation
 
