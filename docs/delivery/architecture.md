@@ -33,6 +33,11 @@ Answering is a two-step flow:
    `insufficient_evidence`; otherwise generate a plain-text answer from the
    retrieved passages and return `answered`.
 
+The answering path is scoped to retrieved corpus passages and returns those
+passages as source references. It does not currently add an explicit
+unsupported, ambiguous, conflicting, or partial-support classification layer
+beyond the threshold-based abstention behavior above.
+
 The default answer synthesizer backend is Ollama with `qwen3.5:9b`. The
 deterministic answer synthesizer remains available for tests and explicitly
 offline workflows. Ollama availability is not a startup precondition; if the
