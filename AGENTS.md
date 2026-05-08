@@ -28,3 +28,4 @@ the baseline implementation path.
 
 ## Development Practices
 - Save any temporary, exploratory, or developer-experience (devex) scripts into the `scripts/devex/` directory.
+- Temporary Docker-related files and local container/runtime scratch artifacts may be placed in the `@.tmp/` directory.
