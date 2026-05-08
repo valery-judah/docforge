@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -10,7 +11,8 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from doc_forge.answering import AnswerQuery, AnswerResult, AnswerService
+from doc_forge.answer_synthesis import AnswerSynthesisError
+from doc_forge.answering import AnswerQuery, AnswerResult, AnswerService, AnswerState
 from doc_forge.app.dependencies import (
     create_app_container,
     get_answer_service,
@@ -35,6 +37,7 @@ from doc_forge.services import (
 
 router = APIRouter()
 STATIC_DIR = Path(__file__).parent / "static"
+logger = logging.getLogger(__name__)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -150,6 +153,7 @@ class RetrievalQueryResponse(BaseModel):
 class AnswerQueryResponse(BaseModel):
     corpus_id: str
     question: str
+    state: AnswerState
     answer: str | None
     source_passages: tuple[RetrievedPassageResponse, ...]
 
@@ -274,9 +278,21 @@ def answer_question(
     request: AnswerQueryRequest,
     answer_service: Annotated[AnswerService, Depends(get_answer_service)],
 ) -> AnswerResult:
-    return answer_service.answer(
-        AnswerQuery(
-            corpus_id=corpus_id,
-            question=request.question,
+    try:
+        return answer_service.answer(
+            AnswerQuery(
+                corpus_id=corpus_id,
+                question=request.question,
+            )
         )
-    )
+    except AnswerSynthesisError as exc:
+        logger.warning(
+            "Answer request failed: corpus_id=%s question=%r error=%s",
+            corpus_id,
+            request.question,
+            str(exc),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Configured answer synthesizer is unavailable.",
+        ) from exc

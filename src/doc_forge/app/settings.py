@@ -5,13 +5,18 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Self
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class EmbeddingModelRegime(StrEnum):
     DETERMINISTIC = "deterministic"
     TRANSFORMER = "transformer"
+
+
+class AnswerSynthesizerBackend(StrEnum):
+    DETERMINISTIC = "deterministic"
+    OLLAMA = "ollama"
 
 
 _DEFAULT_SECRETS_DIR = Path("/run/secrets")
@@ -33,6 +38,12 @@ class Settings(BaseSettings):
     service_name: str = "doc_forge-api"
     json_log_path: Path | None = None
     embedding_model: EmbeddingModelRegime = EmbeddingModelRegime.TRANSFORMER
+    answer_synthesizer_backend: AnswerSynthesizerBackend = AnswerSynthesizerBackend.OLLAMA
+    answer_synthesizer_model: str = Field(default="qwen3.5:9b", min_length=1)
+    ollama_base_url: str = "http://127.0.0.1:11434"
+    answering_top_k: int = Field(default=3, ge=1, le=20)
+    answering_min_score: float = Field(default=0.3, ge=0.0, le=1.0)
+    answer_synthesis_timeout_seconds: float = Field(default=90.0, gt=0.0)
     hf_home: Path | None = None
     torchinductor_cache_dir: Path | None = None
     hf_hub_offline: bool = False
@@ -46,13 +57,19 @@ class Settings(BaseSettings):
             self.torchinductor_cache_dir = self.artifact_root / "torchinductor-cache"
         return self
 
-    def safe_summary(self) -> dict[str, str | bool | None]:
+    def safe_summary(self) -> dict[str, str | int | float | bool | None]:
         return {
             "environment": self.environment,
             "artifact_root": str(self.artifact_root),
             "service_name": self.service_name,
             "json_log_path": str(self.json_log_path) if self.json_log_path else None,
             "embedding_model": self.embedding_model.value,
+            "answer_synthesizer_backend": self.answer_synthesizer_backend.value,
+            "answer_synthesizer_model": self.answer_synthesizer_model,
+            "ollama_base_url": self.ollama_base_url,
+            "answering_top_k": self.answering_top_k,
+            "answering_min_score": self.answering_min_score,
+            "answer_synthesis_timeout_seconds": self.answer_synthesis_timeout_seconds,
             "hf_home_configured": self.hf_home is not None,
             "torchinductor_cache_dir_configured": self.torchinductor_cache_dir is not None,
             "hf_hub_offline": self.hf_hub_offline,

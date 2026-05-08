@@ -27,6 +27,7 @@ def test_answer_query_returns_extractive_answer_with_source_passage(
     payload = response.json()
     assert payload["corpus_id"] == "research"
     assert payload["question"] == "The answer pipeline returns the top retrieved passage."
+    assert payload["state"] == "answered"
     assert payload["answer"] == "The answer pipeline returns the top retrieved passage."
     assert set(payload["source_passages"][0]) == {
         "rank",
@@ -78,6 +79,7 @@ def test_answer_query_returns_no_answer_for_empty_corpus(
     assert response.json() == {
         "corpus_id": "empty",
         "question": "anything",
+        "state": "insufficient_evidence",
         "answer": None,
         "source_passages": [],
     }
@@ -114,6 +116,7 @@ def test_answer_query_openapi_uses_answer_naming(client: TestClient) -> None:
     assert set(response_schema["properties"]) == {
         "corpus_id",
         "question",
+        "state",
         "answer",
         "source_passages",
     }

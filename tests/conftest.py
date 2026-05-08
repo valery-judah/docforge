@@ -5,6 +5,7 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
+from doc_forge.answer_synthesis import DeterministicAnswerSynthesizer
 from doc_forge.answering import AnswerService
 from doc_forge.app.api import create_app
 from doc_forge.app.dependencies import (
@@ -23,7 +24,12 @@ from doc_forge.services import DocumentService
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
-    app = create_app(Settings(embedding_model="deterministic", _env_file=None))
+    settings = Settings(
+        embedding_model="deterministic",
+        answer_synthesizer_backend="deterministic",
+        _env_file=None,
+    )
+    app = create_app(settings)
     documents = InMemoryDocumentStore()
     embeddings = InMemoryEmbeddingStore()
     ingestion = InMemoryDocumentIngestionRepository(
@@ -33,7 +39,12 @@ def client() -> Iterator[TestClient]:
     embedding_model = DeterministicEmbeddingModel()
     document_service = DocumentService(documents, ingestion, embeddings, embedding_model)
     retrieval_service = RetrievalService(embeddings, embedding_model)
-    answer_service = AnswerService(retrieval_service)
+    answer_service = AnswerService(
+        retrieval_service,
+        DeterministicAnswerSynthesizer(),
+        top_k=settings.answering_top_k,
+        min_score=settings.answering_min_score,
+    )
     app.dependency_overrides[get_document_service] = lambda: document_service
     app.dependency_overrides[get_retrieval_service] = lambda: retrieval_service
     app.dependency_overrides[get_answer_service] = lambda: answer_service

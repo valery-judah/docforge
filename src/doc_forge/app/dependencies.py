@@ -5,9 +5,19 @@ from typing import cast
 
 from fastapi import Request
 
+from doc_forge.answer_synthesis import (
+    AnswerSynthesizer,
+    DeterministicAnswerSynthesizer,
+    OllamaAnswerSynthesizer,
+)
 from doc_forge.answering import AnswerService
 from doc_forge.app.runtime_checks import validate_runtime
-from doc_forge.app.settings import EmbeddingModelRegime, Settings, get_settings
+from doc_forge.app.settings import (
+    AnswerSynthesizerBackend,
+    EmbeddingModelRegime,
+    Settings,
+    get_settings,
+)
 from doc_forge.embedding.contracts import EmbeddingModel
 from doc_forge.embedding.deterministic import DeterministicEmbeddingModel
 from doc_forge.embedding.sentence_transformer import SentenceTransformerEmbeddingModel
@@ -47,8 +57,21 @@ def _create_embedding_model(settings: Settings) -> EmbeddingModel:
     raise RuntimeError("DOC_FORGE_EMBEDDING_MODEL must be one of: deterministic, transformer")
 
 
+def _create_answer_synthesizer(settings: Settings) -> AnswerSynthesizer:
+    if settings.answer_synthesizer_backend is AnswerSynthesizerBackend.DETERMINISTIC:
+        return DeterministicAnswerSynthesizer()
+    if settings.answer_synthesizer_backend is AnswerSynthesizerBackend.OLLAMA:
+        return OllamaAnswerSynthesizer(
+            base_url=settings.ollama_base_url,
+            model=settings.answer_synthesizer_model,
+            timeout_seconds=settings.answer_synthesis_timeout_seconds,
+        )
+    raise RuntimeError("DOC_FORGE_ANSWER_SYNTHESIZER_BACKEND must be one of: deterministic, ollama")
+
+
 def _create_services(settings: Settings) -> tuple[DocumentService, RetrievalService, AnswerService]:
     embedding_model = _create_embedding_model(settings)
+    answer_synthesizer = _create_answer_synthesizer(settings)
 
     document_repository = InMemoryDocumentStore()
     embedding_repository = InMemoryEmbeddingStore()
@@ -67,7 +90,12 @@ def _create_services(settings: Settings) -> tuple[DocumentService, RetrievalServ
         embedding_repository=embedding_repository,
         embedding_model=embedding_model,
     )
-    answer_service = AnswerService(retrieval_service)
+    answer_service = AnswerService(
+        retrieval_service,
+        answer_synthesizer,
+        top_k=settings.answering_top_k,
+        min_score=settings.answering_min_score,
+    )
     return document_service, retrieval_service, answer_service
 
 

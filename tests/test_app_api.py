@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
 from doc_forge import __version__
+from doc_forge.answer_synthesis import AnswerSynthesisError
 from doc_forge.app import dependencies
 from doc_forge.app.api import create_app, readyz
 from doc_forge.app.settings import Settings
@@ -102,3 +104,122 @@ def test_default_embedding_model_uses_transformer_mode(
 
     assert isinstance(model, FakeTransformerEmbeddingModel)
     assert created_transformer_models == 1
+
+
+def test_default_answer_synthesizer_uses_ollama_mode(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    created_ollama_synthesizers = 0
+
+    class FakeOllamaAnswerSynthesizer:
+        def __init__(self, *, base_url: str, model: str, timeout_seconds: float) -> None:
+            nonlocal created_ollama_synthesizers
+            created_ollama_synthesizers += 1
+            self.base_url = base_url
+            self.model = model
+            self.timeout_seconds = timeout_seconds
+
+    monkeypatch.setattr(
+        dependencies,
+        "OllamaAnswerSynthesizer",
+        FakeOllamaAnswerSynthesizer,
+    )
+
+    synthesizer = dependencies._create_answer_synthesizer(Settings(_env_file=None))
+
+    assert isinstance(synthesizer, FakeOllamaAnswerSynthesizer)
+    assert synthesizer.base_url == "http://127.0.0.1:11434"
+    assert synthesizer.model == "qwen3.5:9b"
+    assert synthesizer.timeout_seconds == 90.0
+    assert created_ollama_synthesizers == 1
+
+
+def test_explicit_deterministic_answer_synthesizer_is_supported() -> None:
+    synthesizer = dependencies._create_answer_synthesizer(
+        Settings(answer_synthesizer_backend="deterministic", _env_file=None)
+    )
+
+    assert synthesizer.__class__.__name__ == "DeterministicAnswerSynthesizer"
+
+
+def test_answer_synthesis_failure_returns_503_at_request_time(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeOllamaAnswerSynthesizer:
+        def __init__(self, *, base_url: str, model: str, timeout_seconds: float) -> None:
+            _ = base_url, model, timeout_seconds
+
+        def synthesize_answer(self, request) -> str:  # type: ignore[no-untyped-def]
+            _ = request
+            raise AnswerSynthesisError("ollama answer synthesis is unavailable")
+
+    monkeypatch.setattr(
+        dependencies,
+        "OllamaAnswerSynthesizer",
+        FakeOllamaAnswerSynthesizer,
+    )
+    app = create_app(
+        Settings(
+            embedding_model="deterministic",
+            answer_synthesizer_backend="ollama",
+            _env_file=None,
+        )
+    )
+
+    with TestClient(app) as client:
+        upload_response = client.post(
+            "/corpora/lifespan/documents",
+            files={"file": ("notes.md", b"# Runtime\n\nConfigured.", "text/markdown")},
+        )
+        assert upload_response.status_code == 201
+
+        response = client.post(
+            "/corpora/lifespan/answers/query",
+            json={"question": "Configured."},
+        )
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Configured answer synthesizer is unavailable."}
+
+
+def test_answer_synthesis_failure_is_logged(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    class FakeOllamaAnswerSynthesizer:
+        def __init__(self, *, base_url: str, model: str, timeout_seconds: float) -> None:
+            _ = base_url, model, timeout_seconds
+
+        def synthesize_answer(self, request) -> str:  # type: ignore[no-untyped-def]
+            _ = request
+            raise AnswerSynthesisError("ollama answer synthesis is unavailable")
+
+    monkeypatch.setattr(
+        dependencies,
+        "OllamaAnswerSynthesizer",
+        FakeOllamaAnswerSynthesizer,
+    )
+    app = create_app(
+        Settings(
+            embedding_model="deterministic",
+            answer_synthesizer_backend="ollama",
+            _env_file=None,
+        )
+    )
+
+    with caplog.at_level(logging.WARNING):
+        with TestClient(app) as client:
+            upload_response = client.post(
+                "/corpora/lifespan/documents",
+                files={"file": ("notes.md", b"# Runtime\n\nConfigured.", "text/markdown")},
+            )
+            assert upload_response.status_code == 201
+
+            response = client.post(
+                "/corpora/lifespan/answers/query",
+                json={"question": "Configured."},
+            )
+
+    assert response.status_code == 503
+    assert "Answer request failed: corpus_id=lifespan question='Configured.'" in caplog.text
+    assert "ollama answer synthesis is unavailable" in caplog.text
