@@ -8,57 +8,230 @@
   </head>
   <body>
     <main class="shell">
-      <header class="topbar">
-        <div>
-          <h1>DocForge</h1>
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">DocForge QA Pipeline</p>
+          <h1>Ask the corpus. Inspect the evidence.</h1>
+          <p class="hero-text">
+            Upload Markdown documents, retrieve supporting passages, and inspect how each
+            answer was grounded.
+          </p>
+        </div>
+
+        <div class="hero-controls">
+          <form id="corpus-form" class="corpus-form">
+            <label for="corpus-id">Active corpus</label>
+            <div class="control-row">
+              <input
+                id="corpus-id"
+                name="corpus-id"
+                autocomplete="off"
+                value="default"
+              />
+              <button type="submit">Refresh</button>
+            </div>
+          </form>
           <p id="status" class="status" role="status">Ready</p>
         </div>
-        <form id="corpus-form" class="corpus-form">
-          <label for="corpus-id">Corpus</label>
-          <input id="corpus-id" name="corpus-id" autocomplete="off" value="default" />
-          <button type="submit">Refresh</button>
-        </form>
       </header>
 
-      <section class="workspace">
-        <aside class="sidebar" aria-label="Documents">
-          <form id="upload-form" class="upload-form">
-            <label class="file-picker">
-              <span>Markdown</span>
-              <input id="file" name="file" type="file" accept=".md,.markdown,text/markdown" />
-            </label>
-            <button type="submit">Upload</button>
-          </form>
-          <div class="panel-heading">
-            <h2>Documents</h2>
-            <span id="document-count">0</span>
-          </div>
-          <div id="document-list" class="document-list"></div>
-        </aside>
+      <nav class="workspace-nav" role="tablist" aria-label="Workspace modes">
+        <button
+          class="workspace-tab"
+          type="button"
+          role="tab"
+          data-workspace="manage"
+          aria-selected="false"
+        >
+          Manage corpus
+        </button>
+        <button
+          class="workspace-tab active"
+          type="button"
+          role="tab"
+          data-workspace="ask"
+          aria-selected="true"
+        >
+          Ask corpus
+        </button>
+      </nav>
 
-        <section class="detail" aria-label="Document inspection">
-          <div class="document-header">
-            <div>
-              <h2 id="document-title">No document selected</h2>
-              <p id="document-meta" class="muted"></p>
-            </div>
-          </div>
+      <section class="workspace-panel" data-workspace-panel="manage" hidden>
+        <section class="workspace manage-workspace">
+          <aside class="rail manage-rail" aria-label="Corpus management">
+            <section class="panel upload-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="panel-kicker">Stage 1</p>
+                  <h2>Corpus ready</h2>
+                </div>
+                <span id="document-count" class="count-chip">0</span>
+              </div>
 
-          <div class="tabs" role="tablist" aria-label="Document views">
-            <button class="tab active" type="button" data-view="structure">Structure</button>
-            <button class="tab" type="button" data-view="raw">Raw</button>
-          </div>
+              <p class="panel-text">
+                Add Markdown files to the active corpus, then browse the document set
+                before asking questions.
+              </p>
 
-          <div id="structure-view" class="view active">
-            <div id="structure"></div>
-          </div>
-          <div id="raw-view" class="view">
-            <pre id="raw-body" class="raw"></pre>
-          </div>
+              <form id="upload-form" class="upload-form">
+                <label class="file-picker" for="file">
+                  <span>Markdown file</span>
+                  <input id="file" name="file" type="file" accept=".md,.markdown,text/markdown" />
+                </label>
+                <button id="upload-button" type="submit">Upload</button>
+              </form>
+              <p id="upload-feedback" class="panel-text">
+                The active corpus starts empty until you upload documents.
+              </p>
+            </section>
+
+            <section class="panel document-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="panel-kicker">Corpus</p>
+                  <h2>Documents</h2>
+                </div>
+              </div>
+              <div id="document-list" class="document-list"></div>
+            </section>
+          </aside>
+
+          <aside class="inspector-column" aria-label="Corpus inspector">
+            <section id="manage-inspector" class="panel inspector-panel">
+              <div class="panel-heading inspector-heading">
+                <div>
+                  <p class="panel-kicker">Inspector</p>
+                  <h2 data-role="document-title">No document selected</h2>
+                  <p data-role="document-meta" class="panel-text"></p>
+                </div>
+                <div data-role="inspector-focus" class="focus-chip muted">
+                  Browse a document or select evidence.
+                </div>
+              </div>
+
+              <div class="tabs" role="tablist" aria-label="Document views">
+                <button class="tab active" type="button" data-view="structure">Structure</button>
+                <button class="tab" type="button" data-view="raw">Raw</button>
+              </div>
+
+              <div class="view active" data-view-panel="structure">
+                <div data-role="structure"></div>
+              </div>
+
+              <div class="view" data-view-panel="raw">
+                <pre class="raw" data-role="raw-body"></pre>
+              </div>
+            </section>
+          </aside>
+        </section>
+      </section>
+
+      <section class="workspace-panel active" data-workspace-panel="ask">
+        <section class="workspace ask-workspace">
+          <section class="main-column" aria-label="Question answering pipeline">
+            <section class="panel question-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="panel-kicker">Ask</p>
+                  <h2>Question composer</h2>
+                </div>
+              </div>
+
+              <form id="question-form" class="question-form">
+                <label for="question-input">Question</label>
+                <textarea
+                  id="question-input"
+                  name="question"
+                  rows="3"
+                  placeholder="Ask a grounded question against this corpus"
+                ></textarea>
+                <div class="question-actions">
+                  <p class="question-hint">
+                    Press Enter to run. Use Shift+Enter for a new line.
+                  </p>
+                  <button id="ask-button" type="submit">Run pipeline</button>
+                </div>
+              </form>
+            </section>
+
+            <article
+              class="panel stage-panel answer-panel generation-stage"
+              aria-labelledby="generation-stage-title"
+            >
+              <div class="panel-heading">
+                <div>
+                  <p class="panel-kicker">Stage 3</p>
+                  <h2 id="generation-stage-title">Generate answer</h2>
+                </div>
+                <span id="generation-stage-badge" class="stage-badge idle">Idle</span>
+              </div>
+              <p class="panel-text">
+                The answer backend produces grounded answer text only when supporting
+                passages clear the evidence threshold.
+              </p>
+              <div id="generation-panel" class="stage-body"></div>
+            </article>
+
+            <section class="pipeline-grid">
+              <article class="panel stage-panel" aria-labelledby="retrieval-stage-title">
+                <div class="panel-heading">
+                  <div>
+                    <p class="panel-kicker">Stage 2</p>
+                    <h2 id="retrieval-stage-title">Retrieve candidates</h2>
+                  </div>
+                  <span id="retrieval-stage-badge" class="stage-badge idle">Idle</span>
+                </div>
+                <p class="panel-text">
+                  Candidate evidence from retrieval. This list is informative and may be
+                  broader than the final supported source passages.
+                </p>
+                <div id="retrieval-panel" class="stage-body"></div>
+              </article>
+
+              <article class="panel stage-panel answer-panel" aria-labelledby="result-stage-title">
+                <div class="panel-heading">
+                  <div>
+                    <p class="panel-kicker">Stage 4</p>
+                    <h2 id="result-stage-title">Final result</h2>
+                  </div>
+                  <span id="result-stage-badge" class="stage-badge idle">Idle</span>
+                </div>
+                <div id="result-panel" class="stage-body"></div>
+              </article>
+            </section>
+          </section>
+
+          <aside class="inspector-column" aria-label="Evidence inspector">
+            <section id="ask-inspector" class="panel inspector-panel">
+              <div class="panel-heading inspector-heading">
+                <div>
+                  <p class="panel-kicker">Inspector</p>
+                  <h2 data-role="document-title">No document selected</h2>
+                  <p data-role="document-meta" class="panel-text"></p>
+                </div>
+                <div data-role="inspector-focus" class="focus-chip muted">
+                  Browse a document or select evidence.
+                </div>
+              </div>
+
+              <div class="tabs" role="tablist" aria-label="Document views">
+                <button class="tab active" type="button" data-view="structure">Structure</button>
+                <button class="tab" type="button" data-view="raw">Raw</button>
+              </div>
+
+              <div class="view active" data-view-panel="structure">
+                <div data-role="structure"></div>
+              </div>
+
+              <div class="view" data-view-panel="raw">
+                <pre class="raw" data-role="raw-body"></pre>
+              </div>
+            </section>
+          </aside>
         </section>
       </section>
     </main>
 
-    <script src="/ui/static/app.js"></script>
+    <script type="module" src="/ui/static/main.js"></script>
   </body>
 </html>

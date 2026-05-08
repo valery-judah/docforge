@@ -35,13 +35,21 @@ def test_web_ui_is_served(client: TestClient) -> None:
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert "DocForge" in response.text
+    assert "Manage corpus" in response.text
+    assert "Ask corpus" in response.text
+    assert "Question composer" in response.text
+    assert "Retrieve candidates" in response.text
+    assert "Generate answer" in response.text
+    assert "Final result" in response.text
+    assert 'type="module"' in response.text
+    assert "/ui/static/main.js" in response.text
 
 
 def test_web_ui_static_asset_is_served(client: TestClient) -> None:
-    response = client.get("/ui/static/app.js")
+    response = client.get("/ui/static/main.js")
 
     assert response.status_code == 200
-    assert "loadDocuments" in response.text
+    assert "createControllers" in response.text
 
 
 def test_create_app_defers_runtime_validation_until_lifespan(tmp_path: Path) -> None:
