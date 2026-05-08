@@ -41,8 +41,11 @@ The task-runner split mirrors the `sem-rag` setup:
 
 - Product scope: [docs/evergreen/mvp.md](docs/evergreen/mvp.md)
 - Current architecture: [docs/delivery/architecture.md](docs/delivery/architecture.md)
+- macOS install guide: [docs/delivery/install-macos.md](docs/delivery/install-macos.md)
 - Runtime and setup runbooks: [docs/delivery/runbooks.md](docs/delivery/runbooks.md)
 - End-to-end smoke test runbook: [docs/delivery/smoke-test-e2e.md](docs/delivery/smoke-test-e2e.md)
 
-Use the smoke runbook when you want to start the demo stack, seed the demo
-corpus, run the live QA smoke scenario, or troubleshoot answer-path failures.
+Use the macOS install guide when you need a contributor workstation setup from
+scratch. Use the smoke runbook when you want to start the demo stack, seed the
+demo corpus, run the live QA smoke scenario, or troubleshoot answer-path
+failures.

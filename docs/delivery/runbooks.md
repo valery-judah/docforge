@@ -1,5 +1,9 @@
 # Runbooks
 
+Use [install-macos.md](install-macos.md) first if you need a working macOS
+workstation setup for this repo. This page assumes the required tools are
+already installed and focuses on operating the runtime.
+
 ## Docker Runtime Basics
 
 Use Docker Compose for the default application runtime:
@@ -85,6 +89,9 @@ The default answer backend is Ollama with `qwen3.5:9b`:
 ollama pull qwen3.5:9b
 uv run poe run-api
 ```
+
+For first-time macOS installation of Ollama and the repo toolchain, see
+[install-macos.md](install-macos.md).
 
 Host-local app runs default to:
 

@@ -46,7 +46,8 @@ If needed:
 ollama pull qwen3.5:9b
 ```
 
-For general Docker runtime and local Ollama setup, see
+For workstation installation on macOS, see
+[install-macos.md](install-macos.md). For general runtime operations, see
 [runbooks.md](runbooks.md).
 
 ## Standard Host Workflow
